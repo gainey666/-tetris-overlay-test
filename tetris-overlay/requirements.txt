@@ -1,0 +1,6 @@
+numpy
+opencv-python
+mss
+pygame
+onnxruntime   # optional – only needed if you use the CNN backend
+# tetris_bot is a pure‑Python library; copy its source into src/ or install via pip if you have it.

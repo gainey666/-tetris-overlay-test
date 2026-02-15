@@ -1,0 +1,8 @@
+pyyaml>=6.0
+opencv-python>=4.8
+pygame>=2.5
+numpy>=1.24
+pybind11>=2.11
+mss>=7.0
+tqdm>=4.66
+onnxruntime>=1.16

@@ -1,0 +1,30 @@
+# Byte-code / caches
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+*.egg
+*.so
+
+# Virtual environment
+venv/
+.env/
+ENV/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# CMake / build artefacts
+build/
+cmake-build-*/
+*.o
+*.obj
+*.a
+*.lib
+*.dll
+*.exe
+
+# Pytest cache
+.pytest_cache/

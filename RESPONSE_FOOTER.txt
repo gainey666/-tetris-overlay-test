@@ -1,0 +1,4 @@
+# Standard Response Footer
+
+---------
+this is cursor AI response please plan accordingly
