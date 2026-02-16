@@ -29,6 +29,11 @@ game_screenshots/
 personia/
 legacy/
 
+# Docs drafts (don’t commit planning docs)
+docs/PROJECT_*.md
+docs/NEXT_STEPS_PLAN.md
+docs/PREDICTION_COMPONENT_SUMMARY.md
+
 # CMake / build artefacts
 build/
 cmake-build-*/
