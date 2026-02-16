@@ -2,6 +2,7 @@ from capture import ScreenCapture
 from dual_roi_manager import get_roi_pair
 import logging
 
+
 class DualScreenCapture:
     def __init__(self):
         rois = get_roi_pair()

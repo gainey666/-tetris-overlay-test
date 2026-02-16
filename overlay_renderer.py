@@ -14,6 +14,16 @@ class OverlayRenderer:
         self.visible = False
         logging.info("OverlayRenderer initialized (hidden)")
 
+    def draw_ghost(self, surface, column, rotation, piece_type="T"):
+        """Draw a semi-transparent ghost piece at the given column/rotation."""
+        # Simple placeholder: draw a rectangle at column*cell_width
+        cell_w = 30
+        cell_h = 30
+        x = column * cell_w
+        y = 0
+        color = (255, 255, 255, 128)  # semi-transparent white
+        pygame.draw.rect(surface, color, (x, y, cell_w * 4, cell_h * 4), 2)
+
     def toggle(self):
         self.visible = not self.visible
         logging.info("Overlay visibility=%s", self.visible)
@@ -26,32 +36,34 @@ class OverlayRenderer:
         if not windows:
             logging.warning("No Tetris window found")
             return
-        
+
         # Get the best window (highest score)
         hwnd = max(windows.items(), key=lambda item: item[1])[0]
-        
+
         try:
             cache = load_cache()
             roi = cache.get("roi", [0, 0, 640, 360])
-            
+
             # Convert ROI format from [x0, y0, x1, y1] to (left, top, width, height)
             if len(roi) == 4:
                 capture_rect = (roi[0], roi[1], roi[2] - roi[0], roi[3] - roi[1])
             else:
                 capture_rect = tuple(roi)
-            
+
             capture = ScreenCapture(capture_rect)
             img = capture.grab()
             surface = pygame.image.fromstring(img.tobytes(), img.size, "RGB")
             size = surface.get_size()
-            self.screen = pygame.display.set_mode(size, pygame.NOFRAME | pygame.SRCALPHA)
+            self.screen = pygame.display.set_mode(
+                size, pygame.NOFRAME | pygame.SRCALPHA
+            )
             self.screen.blit(surface, (0, 0))
             ghost = pygame.Surface((80, 40), pygame.SRCALPHA)
             ghost.fill((0, 255, 0, 96))
             self.screen.blit(ghost, (20, 20))
             pygame.display.update()
             logging.info("Overlay surface refreshed (hwnd=%s)", hwnd)
-            
+
         except Exception as e:
             logging.error(f"Failed to update overlay surface: {e}")
             self.visible = False

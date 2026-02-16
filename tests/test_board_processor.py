@@ -1,4 +1,5 @@
 """Validate that BoardProcessorAgent creates a binary mask."""
+
 import numpy as np
 
 from src.agents.board_processor_agent import BoardProcessorAgent

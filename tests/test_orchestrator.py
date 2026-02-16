@@ -1,4 +1,5 @@
 """Orchestrator should load a plan and call each registered agent."""
+
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -23,7 +24,9 @@ def test_plan_execution(tmp_path):
     mock_two = MagicMock()
 
     # Temporarily replace the registry entries
-    with patch.dict(AGENT_REGISTRY, {"dummy_one": mock_one, "dummy_two": mock_two}, clear=True):
+    with patch.dict(
+        AGENT_REGISTRY, {"dummy_one": mock_one, "dummy_two": mock_two}, clear=True
+    ):
         orchestrate(plan_path=str(plan_file))
 
     mock_one.handle.assert_called_once_with({})

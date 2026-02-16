@@ -2,6 +2,7 @@ import pygame, numpy as np
 from .base_agent import BaseAgent
 from .config_agent import ConfigAgent
 
+
 class OverlayRendererAgent(BaseAgent):
     def __init__(self):
         cfg = ConfigAgent.config or ConfigAgent()
@@ -24,13 +25,11 @@ class OverlayRendererAgent(BaseAgent):
         rot = params["orientation"]
         col = pred["target_col"]
         # Simple ghost: draw 4 blocks at predicted column
-        block_color = (0,255,0,120)   # semi‑transparent green
+        block_color = (0, 255, 0, 120)  # semi‑transparent green
         for x in range(4):
             rect = pygame.Rect(
-                (col + x) * self.scale,
-                0 * self.scale,
-                self.scale,
-                self.scale)
+                (col + x) * self.scale, 0 * self.scale, self.scale, self.scale
+            )
             s = pygame.Surface((self.scale, self.scale), pygame.SRCALPHA)
             s.fill(block_color)
             self.window.blit(s, rect.topleft)

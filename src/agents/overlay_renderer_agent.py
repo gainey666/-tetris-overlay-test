@@ -1,4 +1,5 @@
 """Render the board mask + predictions using pygame (ghost window)."""
+
 from __future__ import annotations
 
 import json
@@ -21,16 +22,16 @@ log = logging.getLogger(__name__)
 # ----------------------------------------------------------------------
 # Load the global config once – we need the `auto_fit` flag and the board size
 # ----------------------------------------------------------------------
-_CFG_PATH = Path.cwd() / "config.json"
+_CFG_PATH = Path.cwd() / "config" / "config.json"
 _cfg = json.load(_CFG_PATH.open())
-_AUTO_FIT = _cfg.get("auto_fit", True)          # default to the new behaviour
-_BOARD_W  = _cfg.get("board_width", 20)
-_BOARD_H  = _cfg.get("board_height", 10)
+_AUTO_FIT = _cfg.get("auto_fit", True)  # default to the new behaviour
+_BOARD_W = _cfg.get("board_width", 20)
+_BOARD_H = _cfg.get("board_height", 10)
 
 
 class OverlayRendererAgent(BaseAgent):
     """Draws a semi-transparent overlay on top of a live view."""
-    
+
     # -----------------------------------------------------------------
     # Singleton plumbing – the hot‑key agent needs a reference to the
     # *exact* renderer instance that the main loop created.
@@ -41,7 +42,9 @@ class OverlayRendererAgent(BaseAgent):
     def instance(cls) -> "OverlayRendererAgent":
         """Return the (already‑created) renderer instance – used by HotkeyAgent."""
         if cls._instance is None:
-            raise RuntimeError("OverlayRendererAgent.instance() called before it was created")
+            raise RuntimeError(
+                "OverlayRendererAgent.instance() called before it was created"
+            )
         return cls._instance
 
     def __init__(self, **kw):
@@ -53,7 +56,7 @@ class OverlayRendererAgent(BaseAgent):
         from .board_processor_agent import BoardProcessorAgent
         from .prediction_agent import PredictionAgent
         from .capture_agent import CaptureAgent
-        
+
         self.board_processor: BoardProcessorAgent | None = None
         self.prediction_agent: PredictionAgent | None = None
         self.capture = CaptureAgent()
@@ -71,7 +74,7 @@ class OverlayRendererAgent(BaseAgent):
             # Dynamic sizing – keep cells square, fit inside the ROI
             cell_w = roi_w // _BOARD_W
             cell_h = roi_h // _BOARD_H
-            self.cell_px = min(cell_w, cell_h)   # square cells
+            self.cell_px = min(cell_w, cell_h)  # square cells
             self.window_w = _BOARD_W * self.cell_px
             self.window_h = _BOARD_H * self.cell_px
         else:
@@ -89,7 +92,7 @@ class OverlayRendererAgent(BaseAgent):
             pygame.NOFRAME | pygame.SRCALPHA | pygame.HWSURFACE | pygame.DOUBLEBUF,
         )
         pygame.display.set_caption("Tetris Ghost Overlay")
-        
+
         self._stop_event = threading.Event()
         self._thread: Optional[threading.Thread] = None
         self._initialized = False
@@ -105,15 +108,16 @@ class OverlayRendererAgent(BaseAgent):
         """Re‑create the pygame surface after the ROI size has changed."""
         # Re‑compute cell size exactly as we do in __init__
         from .capture_agent import CaptureAgent
+
         cap = CaptureAgent()
         roi_w = cap.roi_width
         roi_h = cap.roi_height
-        
+
         if _AUTO_FIT:
             # Dynamic sizing – keep cells square, fit inside the ROI
             cell_w = roi_w // _BOARD_W
             cell_h = roi_h // _BOARD_H
-            self.cell_px = min(cell_w, cell_h)   # square cells
+            self.cell_px = min(cell_w, cell_h)  # square cells
             self.window_w = _BOARD_W * self.cell_px
             self.window_h = _BOARD_H * self.cell_px
         else:
@@ -121,14 +125,16 @@ class OverlayRendererAgent(BaseAgent):
             self.cell_px = 15
             self.window_w = _BOARD_W * self.cell_px
             self.window_h = _BOARD_H * self.cell_px
-        
+
         # Re‑initialise pygame surface with the new dimensions.
         if self._initialized:
             self.screen = pygame.display.set_mode(
                 (self.window_w, self.window_h),
                 pygame.NOFRAME | pygame.SRCALPHA | pygame.HWSURFACE | pygame.DOUBLEBUF,
             )
-            print(f"[OverlayRendererAgent] Surface rebuilt: {self.window_w}x{self.window_h}, cell_px={self.cell_px}")
+            print(
+                f"[OverlayRendererAgent] Surface rebuilt: {self.window_w}x{self.window_h}, cell_px={self.cell_px}"
+            )
 
     def handle(self, params: Optional[dict] = None) -> None:
         params = params or {}
@@ -169,14 +175,18 @@ class OverlayRendererAgent(BaseAgent):
             self._initialized = True
 
         clock = pygame.time.Clock()
-        log.info("OverlayRendererAgent rendering with auto_fit=%s, cell_px=%d", _AUTO_FIT, self.cell_px)
+        log.info(
+            "OverlayRendererAgent rendering with auto_fit=%s, cell_px=%d",
+            _AUTO_FIT,
+            self.cell_px,
+        )
 
         while not self._stop_event.is_set():
             # Early‑out if the user hid the overlay.
             if not self._visible:
                 clock.tick(30)  # Default FPS when hidden
                 continue
-                
+
             for ev in pygame.event.get():
                 if ev.type == pygame.QUIT:
                     self._stop_event.set()

@@ -1,4 +1,5 @@
 """High-level driver that ties capture, processing, prediction, and overlay."""
+
 from __future__ import annotations
 
 import logging

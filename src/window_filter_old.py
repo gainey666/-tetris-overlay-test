@@ -30,9 +30,9 @@ def find_window(title_substring: str) -> Optional[Tuple[int, int, int, int]]:
     Return ``(left, top, width, height)`` of the *first* visible window whose
     title contains ``title_substring`` (case‑insensitive).  If the window is
     minimized we restore it and bring it to the foreground.
-    
+
     Handles window names with random numbers like "Tetris® Effect: Connected (3)".
-    
+
     Parameters
     ----------
     title_substring:
@@ -45,15 +45,15 @@ def find_window(title_substring: str) -> Optional[Tuple[int, int, int, int]]:
     """
     # ``gw.getAllTitles()`` returns a list of all known window titles.
     matching_windows = []
-    
+
     for title in gw.getAllTitles():
         # Handle titles with random numbers like "Tetris® Effect: Connected (3)"
         # Strip the random number part for matching
         clean_title = title
-        if '(' in title and ')' in title:
+        if "(" in title and ")" in title:
             # Remove the "(number)" part for matching
-            clean_title = title[:title.rfind('(')].strip()
-        
+            clean_title = title[: title.rfind("(")].strip()
+
         if title_substring.lower() in clean_title.lower():
             # There may be several windows with the same title; we take the
             # first one.
@@ -66,12 +66,15 @@ def find_window(title_substring: str) -> Optional[Tuple[int, int, int, int]]:
                 if win.width < 200 or win.height < 200:
                     continue
                 # Prioritize game windows (exclude editor windows)
-                if any(skip_word in title.lower() for skip_word in ['windsurf', 'visual studio', 'code']):
+                if any(
+                    skip_word in title.lower()
+                    for skip_word in ["windsurf", "visual studio", "code"]
+                ):
                     continue
                 matching_windows.append((title, win))
-    
+
     # Sort by priority: prefer windows with "effect" or actual game names
-    game_keywords = ['effect', 'connected', 'game', 'play']
+    game_keywords = ["effect", "connected", "game", "play"]
     for keyword in game_keywords:
         for title, win in matching_windows:
             if keyword in title.lower():
@@ -80,7 +83,7 @@ def find_window(title_substring: str) -> Optional[Tuple[int, int, int, int]]:
                 win.activate()
                 time.sleep(0.05)
                 return win.left, win.top, win.width, win.height
-    
+
     # If no game windows found, return the first suitable window
     if matching_windows:
         title, win = matching_windows[0]
@@ -89,11 +92,11 @@ def find_window(title_substring: str) -> Optional[Tuple[int, int, int, int]]:
         win.activate()
         time.sleep(0.05)
         return win.left, win.top, win.width, win.height
-        
+
     return None
 
 
-if __name__ == "__main__":   # pragma: no cover
+if __name__ == "__main__":  # pragma: no cover
     # Simple sanity test you can run from a console:
     info = find_window("tetris")
     if info:

@@ -2,6 +2,7 @@
 """
 Update window_filter.py with robust title matching
 """
+
 import re
 import pathlib
 

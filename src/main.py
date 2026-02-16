@@ -1,4 +1,5 @@
 """CLI entry point – forwards to the orchestrator."""
+
 import argparse
 import logging
 import sys
@@ -52,22 +53,24 @@ def main() -> None:
         from src.agents.prediction_agent_mock_perfect import PredictionAgent
         from src.agents.board_extractor_agent import BoardExtractorAgent
         from src.agents.piece_detector_agent import PieceDetectorAgent
-        
+
         print(f"Running benchmark for {args.benchmark}ms...")
         start_time = time.time()
-        
+
         # Simple benchmark - run predictions
         predictor = PredictionAgent()
         extractor = BoardExtractorAgent()
         detector = PieceDetectorAgent()
-        
+
         # Simulate work for specified duration
         elapsed = 0
         while elapsed < args.benchmark / 1000.0:
             # Run a quick prediction cycle
-            result = predictor.handle({"board": "dummy", "piece": "T", "orientation": 0})
+            result = predictor.handle(
+                {"board": "dummy", "piece": "T", "orientation": 0}
+            )
             elapsed = time.time() - start_time
-        
+
         print(f"Benchmark completed in {elapsed*1000:.2f}ms")
         print(f"Predictions per second: {len(result) / elapsed:.0f}")
         return

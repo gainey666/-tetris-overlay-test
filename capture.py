@@ -22,7 +22,12 @@ class ScreenCapture:
         mon_top = monitor["top"]
         mon_right = mon_left + monitor["width"]
         mon_bottom = mon_top + monitor["height"]
-        if right <= mon_left or bottom <= mon_top or left >= mon_right or top >= mon_bottom:
+        if (
+            right <= mon_left
+            or bottom <= mon_top
+            or left >= mon_right
+            or top >= mon_bottom
+        ):
             raise ValueError("Capture region lies completely off-screen")
         logging.info("ScreenCapture initialized with region %s", self.region)
 

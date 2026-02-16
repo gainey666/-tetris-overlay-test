@@ -1,4 +1,5 @@
 """Base class for all agents."""
+
 from __future__ import annotations
 
 import abc

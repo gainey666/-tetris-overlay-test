@@ -1,4 +1,5 @@
 """Simple board-mask extraction using OpenCV (Python fallback)."""
+
 from __future__ import annotations
 
 import logging

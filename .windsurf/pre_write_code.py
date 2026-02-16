@@ -18,6 +18,7 @@ The hook receives a JSON object on stdin:
   }
 }
 """
+
 import json
 import os
 import pathlib
@@ -28,7 +29,7 @@ from datetime import datetime
 
 # ----------------------------------------------------------------------
 # Config – can also be overridden with an env‑var before launching Windsurf
-POLICY = os.getenv("CASCADE_FILE_POLICY", "rename").lower()   # rename|delete|ignore
+POLICY = os.getenv("CASCADE_FILE_POLICY", "rename").lower()  # rename|delete|ignore
 # ----------------------------------------------------------------------
 
 

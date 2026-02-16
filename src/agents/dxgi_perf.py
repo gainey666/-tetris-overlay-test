@@ -1,6 +1,7 @@
 import time
 from collections import deque
 
+
 class DXGIPerfMonitor:
     def __init__(self, window_sec: float = 1.0):
         self.window = window_sec

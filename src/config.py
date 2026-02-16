@@ -1,4 +1,5 @@
 """Configuration and calibration data-classes."""
+
 from __future__ import annotations
 
 import json
@@ -19,11 +20,11 @@ class AppConfig:
     board_width: int = 20
     board_height: int = 10
     # ---- NEW DXGI SETTINGS -------------------------------------------------
-    use_dxgi: bool = True            # auto‑detect, can be forced off
-    dxgi_target_fps: int = 60        # desired capture FPS
-    dxgi_pool_size: int = 3           # number of pre‑allocated frames
-    use_overlay: bool = False         # console by default
-    roi: dict | None = None           # {"tl":[0,0],"br":[w,h]} – full frame by default
+    use_dxgi: bool = True  # auto‑detect, can be forced off
+    dxgi_target_fps: int = 60  # desired capture FPS
+    dxgi_pool_size: int = 3  # number of pre‑allocated frames
+    use_overlay: bool = False  # console by default
+    roi: dict | None = None  # {"tl":[0,0],"br":[w,h]} – full frame by default
     # -------------------------------------------------------------------------
 
     @classmethod
@@ -32,12 +33,15 @@ class AppConfig:
             return cls()
         with CONFIG_FILE.open("r", encoding="utf-8") as f:
             data = json.load(f)
-        
+
         # Filter out unknown fields that aren't part of AppConfig
         import inspect
-        app_config_fields = {name for name, _ in inspect.signature(cls).parameters.items()}
+
+        app_config_fields = {
+            name for name, _ in inspect.signature(cls).parameters.items()
+        }
         filtered_data = {k: v for k, v in data.items() if k in app_config_fields}
-        
+
         return cls(**filtered_data)
 
     def save(self) -> None:

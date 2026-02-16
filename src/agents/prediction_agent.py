@@ -1,4 +1,5 @@
 """Stub prediction agent – in a real system this would run an ONNX model."""
+
 from __future__ import annotations
 
 import logging

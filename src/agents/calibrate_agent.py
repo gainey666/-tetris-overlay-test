@@ -1,4 +1,5 @@
 """Placeholder calibration routine."""
+
 from __future__ import annotations
 
 import logging

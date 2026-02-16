@@ -1,4 +1,5 @@
 """Agent package – exports BaseAgent and concrete implementations."""
+
 from .base_agent import BaseAgent
 
 from .capture_agent import CaptureAgent

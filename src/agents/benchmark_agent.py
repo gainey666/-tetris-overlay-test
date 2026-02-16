@@ -1,4 +1,5 @@
 """Simple benchmark that measures time of each pipeline stage."""
+
 from __future__ import annotations
 
 import json

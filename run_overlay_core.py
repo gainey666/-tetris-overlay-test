@@ -1,7 +1,9 @@
 import datetime
+import json
 import logging
 import sys
 import threading
+from pathlib import Path
 
 import keyboard  # type: ignore
 
@@ -20,17 +22,57 @@ LOGGER = setup_telemetry_logger()
 FRAME_COUNTER = 0
 
 # Add hotkey for new calibrator
-keyboard.add_hotkey('ctrl+alt+c', lambda: start_calibrator())
+keyboard.add_hotkey("ctrl+alt+c", lambda: start_calibrator())
+
+
+def load_prediction_agent(agent_name: str):
+    """Dynamically import and instantiate a prediction agent."""
+    if agent_name == "dellacherie":
+        from src.agents.prediction_agent_dellacherie import PredictionAgent
+        return PredictionAgent()
+    elif agent_name == "onnx":
+        from src.agents.prediction_agent_onnx import PredictionAgent
+        return PredictionAgent()
+    elif agent_name == "simple":
+        from src.agents.prediction_agent_simple import PredictionAgent
+        return PredictionAgent()
+    elif agent_name == "mock":
+        from src.agents.prediction_agent_mock_perfect import PredictionAgent
+        return PredictionAgent()
+    else:
+        raise ValueError(f"Unknown prediction_agent: {agent_name}")
+
+
+# Load prediction agent from config
+CONFIG_PATH = Path("config/config.json")
+if CONFIG_PATH.is_file():
+    cfg = json.loads(CONFIG_PATH.read_text())
+    prediction_agent_name = cfg.get("prediction_agent", "dellacherie")
+else:
+    prediction_agent_name = "dellacherie"
+
+prediction_agent = load_prediction_agent(prediction_agent_name)
+
+
+def roi_to_binary_matrix(roi_image):
+    """Convert an ROI image to a 20×10 binary matrix (naive stub)."""
+    import cv2
+    import numpy as np
+
+    gray = cv2.cvtColor(roi_image, cv2.COLOR_BGR2GRAY)
+    small = cv2.resize(gray, (10, 20), interpolation=cv2.INTER_NEAREST)
+    _, binary = cv2.threshold(small, 127, 255, cv2.THRESH_BINARY)
+    return binary
 
 
 def extract_board(image):
     """Extract board state from PIL Image using existing board processing logic."""
     import numpy as np
     import cv2
-    
+
     # Convert PIL to numpy array
     frame = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
-    
+
     # Use existing board processing logic
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     blurred = cv2.GaussianBlur(gray, (5, 5), 0)
@@ -39,7 +81,7 @@ def extract_board(image):
     )
     mask_resized = cv2.resize(thresh, (10, 20), interpolation=cv2.INTER_NEAREST)
     mask_binary = np.where(mask_resized > 127, 1, 0).astype(np.uint8)
-    
+
     return mask_binary
 
 
@@ -50,6 +92,15 @@ def process_frames():
     right_board = extract_board(right_img)
     shared = capture_shared_ui()
     queue_images = capture_next_queue()
+
+    # Predict for left board (stub: use left_board as binary matrix)
+    pred = prediction_agent.handle({"board": left_board, "piece": "T", "orientation": 0})
+
+    # Draw ghost on overlay (simple placeholder)
+    overlay = OverlayRenderer()
+    if overlay.visible:
+        overlay.draw_ghost(overlay.screen, pred["target_col"], pred["target_rot"])
+        pygame.display.flip()
 
     LOGGER.info(
         {
@@ -87,6 +138,7 @@ def _toggle_logging():
 def _graceful_exit():
     logging.info("Esc pressed – shutting down")
     from tetris_overlay_core import graceful_exit
+
     graceful_exit()
 
 

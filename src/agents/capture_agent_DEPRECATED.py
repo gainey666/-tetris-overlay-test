@@ -3,7 +3,7 @@ DEPRECATED: This module has been superseded by the mss-based ScreenCapture in te
 
 The new implementation:
 - Uses mss only (no OpenCV/webcam)
-- Handles negative monitor coordinates properly  
+- Handles negative monitor coordinates properly
 - Is consolidated in tetris_overlay_core.py
 - Follows the project's no-webcam constraint
 

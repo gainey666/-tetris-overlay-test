@@ -1,4 +1,5 @@
 """Thin wrapper that forwards a plan file to the main orchestrator."""
+
 from __future__ import annotations
 
 import logging

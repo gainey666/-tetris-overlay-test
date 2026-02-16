@@ -1,4 +1,5 @@
 """Graceful shutdown – stops all running agents."""
+
 from __future__ import annotations
 
 import logging

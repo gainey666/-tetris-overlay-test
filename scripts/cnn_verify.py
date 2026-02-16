@@ -1,5 +1,6 @@
 ﻿import onnxruntime as ort, numpy as np, time, json, pathlib
-model = pathlib.Path(r'C:\dev stack\tetris again\-tetris-overlay-test\tetris_cnn.onnx')
+
+model = pathlib.Path(r"C:\dev stack\tetris again\-tetris-overlay-test\tetris_cnn.onnx")
 sess = ort.InferenceSession(str(model))
 input_meta = sess.get_inputs()[0]
 shape = []
@@ -13,6 +14,6 @@ inp = {input_meta.name: dummy}
 t0 = time.time()
 _ = sess.run(None, inp)
 lat = (time.time() - t0) * 1000.0
-print(f'Inference latency: {lat:.2f} ms')
-with open('cnn_latency.json','w') as f:
-    json.dump({'latency_ms': lat, 'input_shape': shape}, f)
+print(f"Inference latency: {lat:.2f} ms")
+with open("cnn_latency.json", "w") as f:
+    json.dump({"latency_ms": lat, "input_shape": shape}, f)

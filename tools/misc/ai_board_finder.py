@@ -5,6 +5,7 @@ import logging
 
 model = YOLO("runs/detect/train/weights/best.pt")
 
+
 def infer_board_boxes(frame: Image):
     arr = np.array(frame.convert("RGB"))[:, :, ::-1]
     results = model(arr, verbose=False)[0]

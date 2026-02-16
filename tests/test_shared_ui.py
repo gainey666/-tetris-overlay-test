@@ -3,7 +3,6 @@ import pathlib
 
 import pytest
 
-
 CONFIG = json.load(open("config/roi_config.json", encoding="utf-8"))
 REQUIRED = {
     "player_left_board",

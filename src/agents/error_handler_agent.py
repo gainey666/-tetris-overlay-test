@@ -1,4 +1,5 @@
 """Global error-handling wrapper – logs uncaught exceptions."""
+
 from __future__ import annotations
 
 import logging

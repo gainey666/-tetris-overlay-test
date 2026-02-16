@@ -1,4 +1,5 @@
 """PredictionAgent should convert a mask into a non-empty list of dummy pieces."""
+
 from unittest.mock import MagicMock
 
 import numpy as np

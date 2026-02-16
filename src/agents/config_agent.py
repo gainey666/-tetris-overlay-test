@@ -1,4 +1,5 @@
 """Loads the AppConfig (JSON) and makes it available to other agents."""
+
 from __future__ import annotations
 
 import logging

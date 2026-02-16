@@ -48,7 +48,9 @@ class HotkeyAgent:
         """Spawn a daemon thread that installs the hot‑key callbacks."""
         thread = threading.Thread(target=self._listen, daemon=True)
         thread.start()
-        log.info("[HotkeyAgent] listening for F1 (re-detect), F9 (toggle), F2 (calibrate), Esc (quit)")
+        log.info(
+            "[HotkeyAgent] listening for F1 (re-detect), F9 (toggle), F2 (calibrate), Esc (quit)"
+        )
 
     # -----------------------------------------------------------------
     # Internal helper – runs in the background thread.
@@ -70,6 +72,7 @@ class HotkeyAgent:
         self.overlay_visible = not self.overlay_visible
         # The renderer is a singleton – see OverlayRendererAgent below.
         from .overlay_renderer_agent import OverlayRendererAgent
+
         OverlayRendererAgent.instance().set_visibility(self.overlay_visible)
         log.info(f"[HotkeyAgent] overlay visibility set to {self.overlay_visible}")
 
@@ -89,34 +92,34 @@ class HotkeyAgent:
         from ..window_filter import re_detect_window, _verify_window_with_directshow
         from .capture_agent import CaptureAgent
         from .overlay_renderer_agent import OverlayRendererAgent
-        
+
         print("[HotkeyAgent] Re-detecting Tetris window...")
-        
+
         # Try to find the window again
         win_info = re_detect_window()
         if not win_info:
             print("[HotkeyAgent] No Tetris window found - keeping current settings")
             return
-        
+
         # Verify window is accessible with DirectShow
         if not _verify_window_with_directshow(win_info):
             print("[HotkeyAgent] Window verification failed - keeping current settings")
             return
-        
+
         # Update the CaptureAgent's ROI
         capture = CaptureAgent()
         win_left, win_top, win_w, win_h = win_info
-        
+
         # Re-calculate window-relative ROI
         capture.roi_tl = (capture._abs_tl[0] - win_left, capture._abs_tl[1] - win_top)
         capture.roi_br = (capture._abs_br[0] - win_left, capture._abs_br[1] - win_top)
         capture.roi_width = capture.roi_br[0] - capture.roi_tl[0]
         capture.roi_height = capture.roi_br[1] - capture.roi_tl[1]
         capture.roi = (*capture.roi_tl, *capture.roi_br)
-        
+
         print(f"[HotkeyAgent] Window re-detected at ({win_left}, {win_top})")
         print(f"[HotkeyAgent] New ROI: {capture.roi_tl} to {capture.roi_br}")
-        
+
         # Tell the overlay to rebuild with new dimensions
         try:
             overlay = OverlayRendererAgent.instance()

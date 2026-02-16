@@ -4,11 +4,13 @@
 import numpy as np
 from .base_agent import BaseAgent
 
+
 class PredictionAgent(BaseAgent):
     """
     Mock perfect AI that always chooses the optimal column (0) and rotation (0).
     This simulates 100% accuracy for testing when the ONNX model is unavailable.
     """
+
     def __init__(self):
         pass
 
@@ -22,7 +24,7 @@ class PredictionAgent(BaseAgent):
             "target_rot": 0,
             "is_tspin": False,
             "is_b2b": False,
-            "combo": 0
+            "combo": 0,
         }
 
     def start(self):

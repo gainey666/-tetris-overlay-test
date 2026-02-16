@@ -1,7 +1,7 @@
 import logging
 from typing import Optional
 
-from .base_agent import BaseAgent
+from src.agents.base_agent import BaseAgent
 
 logger = logging.getLogger(__name__)
 

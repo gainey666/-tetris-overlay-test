@@ -1,6 +1,15 @@
 import logging
 import pygame
-from pygame.locals import QUIT, KEYDOWN, K_ESCAPE, MOUSEBUTTONDOWN, MOUSEBUTTONUP, MOUSEMOTION, NOFRAME, SRCALPHA
+from pygame.locals import (
+    QUIT,
+    KEYDOWN,
+    K_ESCAPE,
+    MOUSEBUTTONDOWN,
+    MOUSEBUTTONUP,
+    MOUSEMOTION,
+    NOFRAME,
+    SRCALPHA,
+)
 
 from window_manager import get_active_tetris_hwnd, save_cache, clamp_roi
 from dual_roi_manager import set_roi_pair
@@ -17,10 +26,13 @@ def start_calibration():
             print("Draw second ROI for opponent board...")
     set_roi_pair(rois)
 
+
 def _run_one_drag():
     pygame.init()
     info = pygame.display.Info()
-    screen = pygame.display.set_mode((info.current_w, info.current_h), NOFRAME | SRCALPHA)
+    screen = pygame.display.set_mode(
+        (info.current_w, info.current_h), NOFRAME | SRCALPHA
+    )
     pygame.display.set_caption("Tetris ROI Calibration – Drag to select, Esc to cancel")
     overlay = pygame.Surface(screen.get_size(), SRCALPHA)
     overlay.fill((0, 0, 0, 120))

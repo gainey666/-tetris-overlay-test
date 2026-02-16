@@ -1,4 +1,5 @@
 """Common fixtures for the test suite."""
+
 import pytest
 import numpy as np
 
