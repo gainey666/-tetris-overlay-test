@@ -1,0 +1,178 @@
+{
+  "rois": [
+    {
+      "name": "player_left_board",
+      "rect": [
+        672,
+        377,
+        154,
+        326
+      ]
+    },
+    {
+      "name": "player_right_board",
+      "rect": [
+        1040,
+        375,
+        153,
+        330
+      ]
+    },
+    {
+      "name": "left_hold_piece",
+      "rect": [
+        601,
+        405,
+        55,
+        48
+      ]
+    },
+    {
+      "name": "right_hold_piece",
+      "rect": [
+        962,
+        400,
+        63,
+        61
+      ]
+    },
+    {
+      "name": "left_next_preview",
+      "rect": [
+        831,
+        405,
+        66,
+        41
+      ]
+    },
+    {
+      "name": "right_next_preview",
+      "rect": [
+        1202,
+        399,
+        63,
+        50
+      ]
+    },
+    {
+      "name": "left_garbage_indicator",
+      "rect": [
+        662,
+        395,
+        11,
+        311
+      ]
+    },
+    {
+      "name": "right_garbage_indicator",
+      "rect": [
+        1029,
+        397,
+        9,
+        310
+      ]
+    },
+    {
+      "name": "left_zone_meter",
+      "rect": [
+        599,
+        649,
+        61,
+        64
+      ]
+    },
+    {
+      "name": "right_zone_meter",
+      "rect": [
+        958,
+        650,
+        70,
+        69
+      ]
+    },
+    {
+      "name": "left_score",
+      "rect": [
+        834,
+        574,
+        98,
+        51
+      ]
+    },
+    {
+      "name": "right_score",
+      "rect": [
+        1201,
+        581,
+        115,
+        50
+      ]
+    },
+    {
+      "name": "left_player_name",
+      "rect": [
+        637,
+        743,
+        211,
+        103
+      ]
+    },
+    {
+      "name": "right_player_name",
+      "rect": [
+        1020,
+        744,
+        208,
+        95
+      ]
+    },
+    {
+      "name": "wins",
+      "rect": [
+        856,
+        747,
+        153,
+        34
+      ]
+    },
+    {
+      "name": "timer",
+      "rect": [
+        837,
+        652,
+        60,
+        60
+      ]
+    },
+    {
+      "name": "next_queue",
+      "rect": [
+        [
+          829,
+          401,
+          74,
+          51
+        ],
+        [
+          833,
+          453,
+          76,
+          32
+        ],
+        [
+          832,
+          488,
+          74,
+          35
+        ],
+        [
+          834,
+          527,
+          73,
+          38
+        ]
+      ]
+    }
+  ],
+  "hwnd": null
+}
