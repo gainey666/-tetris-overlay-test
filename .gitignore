@@ -51,3 +51,8 @@ cmake-build-*/
 
 # Pytest cache
 .pytest_cache/
+
+# IDE-specific ignore files (user-specific)
+.codeiumignore
+.vscode/
+.idea/
