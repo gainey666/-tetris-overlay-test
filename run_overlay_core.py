@@ -92,6 +92,10 @@ def _on_settings_changed(new_settings):
     """Handle settings changes."""
     global CURRENT_SETTINGS
     CURRENT_SETTINGS = new_settings
+    
+    # Save settings to disk
+    save_settings(new_settings)
+    
     _register_dynamic_hotkeys()
     
     # Update overlay renderer with new ghost style
@@ -203,6 +207,9 @@ def process_frames():
             
             # Draw stats (combo, B2B)
             overlay_renderer.draw_stats(overlay_renderer.screen)
+            
+            # Draw performance info (FPS)
+            overlay_renderer.draw_performance(overlay_renderer.screen)
             
             pygame.display.flip()
 

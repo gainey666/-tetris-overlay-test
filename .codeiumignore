@@ -10,38 +10,13 @@ dist/
 *.zip
 *.onnx
 tools/
-downloads/
-buildtrees/
-packages/
-installed/
-cpp_binding/
 
 # Binary files
-*.exe
-*.dll
-*.so
-*.dylib
-
-# Test and debug files
-test_*.py
-debug_*.py
-*.log
-*.tmp
-temp/
-cache/
 
 # Python caches
-.venv/
 __pycache__/
 *.pyc
 *.pyo
-
-# Legacy and artifacts
-legacy/
-artifacts/
-game_screenshots/
-verification_temp/
-tetris-artifacts/
 
 # Image files
 *.png

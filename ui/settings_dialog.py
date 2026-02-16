@@ -157,7 +157,9 @@ class SettingsDialog(QDialog):
         self.ok_btn = QPushButton("OK")
         self.cancel_btn = QPushButton("Cancel")
         self.apply_btn = QPushButton("Apply")
+        self.reset_btn = QPushButton("Reset to Defaults")
         btn_layout.addStretch()
+        btn_layout.addWidget(self.reset_btn)
         btn_layout.addWidget(self.apply_btn)
         btn_layout.addWidget(self.ok_btn)
         btn_layout.addWidget(self.cancel_btn)
@@ -166,6 +168,7 @@ class SettingsDialog(QDialog):
         self.ok_btn.clicked.connect(self._accept)
         self.apply_btn.clicked.connect(self._apply)
         self.cancel_btn.clicked.connect(self.reject)
+        self.reset_btn.clicked.connect(self._reset_to_defaults)
 
         # Preview updates when colour/opacity changes
         self.opacity_slider.valueChanged.connect(self._update_preview)
@@ -268,3 +271,20 @@ class SettingsDialog(QDialog):
     def _accept(self):
         self._apply()
         self.accept()
+
+    def _reset_to_defaults(self):
+        """Reset all settings to defaults."""
+        reply = QMessageBox.question(
+            self, 
+            "Reset to Defaults", 
+            "Are you sure you want to reset all settings to their default values?",
+            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.No
+        )
+        
+        if reply == QMessageBox.Yes:
+            from .settings import Settings
+            default_settings = Settings()
+            self._settings = default_settings
+            self._populate_fields()
+            self._update_preview()

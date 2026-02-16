@@ -68,15 +68,37 @@ class OverlayRenderer:
         if self.combo_counter > 1 or self.b2b_counter > 0:
             font = pygame.font.Font(None, 24)
             
-            # Draw combo counter
             if self.combo_counter > 1:
-                combo_text = font.render(f"Combo x{self.combo_counter}", True, (255, 255, 255))
+                combo_text = font.render(f"Combo x{self.combo_counter}", True, (0, 255, 255))
                 surface.blit(combo_text, (10, 10))
             
-            # Draw B2B counter
             if self.b2b_counter > 0:
                 b2b_text = font.render(f"B2B x{self.b2b_counter}", True, (255, 215, 0))
                 surface.blit(b2b_text, (10, 40))
+
+    def draw_performance(self, surface):
+        """Draw FPS and performance info on the overlay."""
+        from performance_monitor import performance_monitor
+        
+        stats = performance_monitor.get_stats()
+        fps = stats['fps']
+        avg_frame_time = stats['avg_frame_time'] * 1000  # Convert to ms
+        
+        # Choose color based on performance
+        if fps >= 25:
+            color = (0, 255, 0)  # Green - good
+        elif fps >= 15:
+            color = (255, 255, 0)  # Yellow - OK
+        else:
+            color = (255, 0, 0)  # Red - poor
+        
+        font = pygame.font.Font(None, 20)
+        fps_text = font.render(f"FPS: {fps:.1f}", True, color)
+        frame_text = font.render(f"Frame: {avg_frame_time:.1f}ms", True, color)
+        
+        # Draw in top-right corner
+        surface.blit(fps_text, (surface.get_width() - 100, 10))
+        surface.blit(frame_text, (surface.get_width() - 100, 30))
 
     def draw_ghost(self, surface, column, rotation, piece_type="T", is_tspin=False, is_b2b=False, combo=0):
         """Draw a semi-transparent ghost piece with special move indicators."""
