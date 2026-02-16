@@ -5,17 +5,17 @@ vcpkg/
 build/
 TetrisOverlay/
 node_modules/
-dist/
 *.egg-info/
-*.zip
-*.onnx
-tools/
 
 # Binary files
+*.exe
+*.dll
+*.so
+*.dylib
 
 # Python caches
 __pycache__/
-*.pyc
+debug_*.pyc
 *.pyo
 
 # Image files

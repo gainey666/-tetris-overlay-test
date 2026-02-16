@@ -21,6 +21,7 @@ from piece_detector import get_current_piece
 from performance_monitor import performance_monitor
 from logger_config import setup_telemetry_logger
 from error_handler import error_handler
+from feature_toggles import is_feature_enabled
 
 # New imports for settings and stats
 from ui.settings_storage import load as load_settings, save as save_settings
@@ -211,7 +212,7 @@ def process_frames():
             pred = {"piece": current_piece, "target_col": 3, "target_rot": 0, "combo": 0, "is_b2b": False, "is_tspin": False}
 
         # Draw ghost on overlay (reuse global renderer instance)
-        if overlay_renderer.visible and CURRENT_SETTINGS.show_combo:
+        if overlay_renderer.visible and is_feature_enabled("ghost_pieces_enabled") and CURRENT_SETTINGS.show_combo:
             # Extract piece type from prediction if available, otherwise use detected piece
             piece_type = pred.get("piece", current_piece)
             
@@ -235,25 +236,28 @@ def process_frames():
             )
             
             # Draw stats (combo, B2B)
-            overlay_renderer.draw_stats(overlay_renderer.screen)
+            if is_feature_enabled("combo_indicators_enabled") or is_feature_enabled("b2b_indicators_enabled"):
+                overlay_renderer.draw_stats(overlay_renderer.screen)
             
             # Draw performance info (FPS)
-            overlay_renderer.draw_performance(overlay_renderer.screen)
+            if is_feature_enabled("performance_monitor_enabled"):
+                overlay_renderer.draw_performance(overlay_renderer.screen)
             
             pygame.display.flip()
 
         # Record statistics
-        latency_ms = (time.time() - capture_start_ts) * 1000
-        record_event(
-            frame=FRAME_COUNTER,
-            piece=pred.get("piece", current_piece),
-            orientation=pred.get("target_rot", 0),
-            lines_cleared=shared.get("lines_cleared", 0),
-            combo=pred.get("combo", 0),
-            b2b=pred.get("is_b2b", False),
-            tspin=pred.get("is_tspin", False),
-            latency_ms=latency_ms
-        )
+        if is_feature_enabled("statistics_enabled"):
+            latency_ms = (time.time() - capture_start_ts) * 1000
+            record_event(
+                frame=FRAME_COUNTER,
+                piece=pred.get("piece", current_piece),
+                orientation=pred.get("target_rot", 0),
+                lines_cleared=shared.get("lines_cleared", 0),
+                combo=pred.get("combo", 0),
+                b2b=pred.get("is_b2b", False),
+                tspin=pred.get("is_tspin", False),
+                latency_ms=latency_ms
+            )
 
         LOGGER.info(
             {
