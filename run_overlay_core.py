@@ -27,7 +27,7 @@ from error_handler import error_handler
 from feature_toggles import is_feature_enabled
 
 # New imports for settings and stats
-from ui.settings_storage import load as load_settings, save as save_settings
+from ui.current_settings import get, update as update_settings
 from ui.settings_dialog import SettingsDialog
 from ui.stats_dashboard import StatsDashboard
 from stats.db import init_db
@@ -39,7 +39,7 @@ LOGGER = setup_telemetry_logger()
 FRAME_COUNTER = 0
 
 # Load settings as global CURRENT singleton
-CURRENT_SETTINGS = load_settings()
+CURRENT_SETTINGS = get()
 
 # Create global overlay renderer instance
 overlay_renderer = OverlayRenderer()
@@ -110,8 +110,8 @@ def _on_settings_changed(new_settings):
     global CURRENT_SETTINGS
     CURRENT_SETTINGS = new_settings
     
-    # Save settings to disk
-    save_settings(new_settings)
+    # Update singleton and persist to disk
+    update_settings(new_settings)
     
     _register_dynamic_hotkeys()
     
