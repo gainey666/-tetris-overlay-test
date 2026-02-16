@@ -43,8 +43,9 @@ if not error_handler.check_dependencies():
     logging.error("Dependency check failed. Exiting.")
     sys.exit(1)
 
-if not error_handler.check_game_window():
-    logging.warning("No game window found. Will try fallback mode.")
+# Skip game window check for now - overlay will work without it
+# if not error_handler.check_game_window():
+#     logging.warning("No game window found. Will try fallback mode.")
 
 if not error_handler.check_roi_config():
     logging.warning("ROI configuration incomplete. Please run calibrator.")
