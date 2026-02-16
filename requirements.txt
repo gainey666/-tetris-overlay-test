@@ -6,3 +6,11 @@ pybind11>=2.11
 mss>=7.0
 tqdm>=4.66
 onnxruntime>=1.16
+Pillow>=10.0
+
+# -------------------------------------------------
+# New optional dependencies for the hot-key / window helpers
+# -------------------------------------------------
+pygetwindow   # window-title detection
+keyboard      # global hot-key handling
+pywin32>=227  # Windows API access

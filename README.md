@@ -1,5 +1,5 @@
-<!--- STATUS-BADGES-START --->
-# 📊 Project Status
+﻿<!--- STATUS-BADGES-START --->
+# ðŸ“Š Project Status
 
 | Task | Status | Note |
 |------|--------|------|
@@ -13,13 +13,13 @@
 | 8 | done | -note "Verification passed; backup tetris_again_backup_20260215.zip generated." |
 <!--- STATUS-BADGES-END   --->
 
-# WindSurf AI – Python Prototype (Agents + Orchestrator)
+# WindSurf AI â€“ Python Prototype (Agents + Orchestrator)
 
 This repository contains a minimal, fully functional prototype of the WindSurf AI pipeline:
 
 - Agent-based architecture (see `src/agents/`).
 - Declarative orchestration plan (`orchestration_plan.yaml`).
-- Python pipeline (capture → board processing → prediction → overlay).
+- Python pipeline (capture â†’ board processing â†’ prediction â†’ overlay).
 - Starter C++ bridge (`cpp_binding/board_processor_cpp/`).
 
 ## Quick Start
@@ -33,16 +33,16 @@ python -m src.main -p orchestration_plan.yaml
 
 ## Project Layout
 
-- `src/` – CLI, config, orchestrator, agents.
-- `tests/` – pytest suite.
-- `cpp_binding/board_processor_cpp/` – placeholder C++ bridge (pybind11 + OpenCV).
+- `src/` â€“ CLI, config, orchestrator, agents.
+- `tests/` â€“ pytest suite.
+- `cpp_binding/board_processor_cpp/` â€“ placeholder C++ bridge (pybind11 + OpenCV).
 - Documentation: `project.md`, `PROJECT_COMPLETE_STATE.md`, `agents.md`, `system.md`.
 
 See `project.md` for milestones and success criteria. 
 
 
 <!--- TASKS-OVERVIEW-START --->
-## 📋 Tasks Overview
+## ðŸ“‹ Tasks Overview
 
 | ID | Description | Current Status |
 |----|-------------|----------------|
@@ -60,3 +60,4 @@ See `project.md` for milestones and success criteria.
 
 # -tetris-overlay-test
 A copy of my screen overlay + predictions tool for backup.
+

@@ -1,0 +1,59 @@
+name: LLM-QA Guard
+
+on:
+  pull_request:
+    paths:
+      - "*.py"
+      - "src/**/*.py"
+      - "generated/**/*.py"
+
+jobs:
+  qa:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install deps
+        run: |
+          python -m venv .venv
+          source .venv/bin/activate
+          pip install -e .            # installs llm_qa_agent
+          pip install -r requirements_qa.txt
+
+      - name: Gather generated files
+        id: files
+        run: |
+          # Get changed Python files
+          echo "files=$(git diff --name-only ${{ github.event.pull_request.base_sha }} ${{ github.sha }} | grep '\.py$' | paste -sd',' -)" >> $GITHUB_OUTPUT
+
+      - name: Run QA-Agent on each file
+        if: steps.files.outputs.files != ''
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          source .venv/bin/activate
+          for f in $(echo "${{ steps.files.outputs.files }}" | tr ',' '\n'); do
+            echo "=== Checking $f ==="
+            # Extract code content for QA
+            CODE=$(cat "$f")
+            python - <<PY
+import json, sys, pathlib
+from llm_qa_agent.qa_agent import run_qa
+from run_qa_cli import llm_chat   # reuse the async wrapper (sync version)
+request = {
+    "prompt": "Code review for Tetris overlay component",
+    "generated_code": '''$CODE''',
+    "model": "gpt-4o-mini",
+    "settings": {}
+}
+audit = run_qa(request, llm_chat)
+print(json.dumps(audit, indent=2))
+if audit["status"] != "PASS":
+    sys.exit(1)
+PY
+          done

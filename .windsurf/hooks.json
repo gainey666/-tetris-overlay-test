@@ -1,0 +1,10 @@
+{
+  "hooks": {
+    "pre_write_code": [
+      {
+        "command": "python3 ${workspace_root}/.windsurf/pre_write_code.py",
+        "show_output": false
+      }
+    ]
+  }
+}

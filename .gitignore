@@ -26,6 +26,8 @@ Capture*.PNG
 game_screenshots/
 *.pyproj.user
 *.swp
+personia/
+legacy/
 
 # CMake / build artefacts
 build/

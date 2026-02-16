@@ -1,5 +1,5 @@
 ﻿import onnxruntime as ort, numpy as np, time, json, pathlib
-model = pathlib.Path(r'G:\dad fucken around\tetris again\tetris_cnn.onnx')
+model = pathlib.Path(r'C:\dev stack\tetris again\-tetris-overlay-test\tetris_cnn.onnx')
 sess = ort.InferenceSession(str(model))
 input_meta = sess.get_inputs()[0]
 shape = []

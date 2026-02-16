@@ -4,19 +4,24 @@ import pathlib
 import pytest
 
 
-CONFIG = json.load(open("roi_config.json"))
+CONFIG = json.load(open("roi_config.json", encoding="utf-8"))
 REQUIRED = {
-    "score",
+    "player_left_board",
+    "player_right_board",
+    "left_hold_piece",
+    "right_hold_piece",
+    "left_next_preview",
+    "right_next_preview",
+    "left_garbage_indicator",
+    "right_garbage_indicator",
+    "left_zone_meter",
+    "right_zone_meter",
+    "left_score",
+    "right_score",
+    "left_player_name",
+    "right_player_name",
     "wins",
     "timer",
-    "level",
-    "lines_cleared",
-    "garbage_meter",
-    "combo_counter",
-    "b2b_indicator",
-    "opponent_score",
-    "opponent_level",
-    "opponent_lines",
 }
 
 
@@ -37,6 +42,6 @@ def test_next_queue_bounds():
     queue = next(e for e in CONFIG["rois"] if e["name"] == "next_queue")
     slots = queue["rect"]
     assert 1 <= len(slots) <= 4, f"next_queue length {len(slots)} out of bounds"
-    for rect in slots:
+    for idx, rect in enumerate(slots, start=1):
         _, _, width, height = rect
-        assert width > 0 and height > 0, "empty slot in next_queue"
+        assert width > 0 and height > 0, f"slot {idx} in next_queue has zero size"

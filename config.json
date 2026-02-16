@@ -1,12 +1,25 @@
 {
-  "roi": {
-    "tl": [
-      13,
-      6
+  "roi": [
+    [
+      672,
+      377,
+      154,
+      326
     ],
-    "br": [
-      629,
-      471
+    [
+      1040,
+      375,
+      153,
+      330
     ]
-  }
+  ],
+  "use_dxgi": false,
+  "dxgi_target_fps": 60,
+  "dxgi_pool_size": 3,
+  "use_overlay": true,
+  "video_source": 0,
+  "target_fps": 30,
+  "board_width": 20,
+  "board_height": 10,
+  "auto_fit": true
 }

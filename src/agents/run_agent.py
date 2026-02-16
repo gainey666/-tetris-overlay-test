@@ -24,7 +24,10 @@ class RunAgent(BaseAgent):
         self.capture = CaptureAgent()
         self.board = BoardProcessorAgent(self.capture)
         self.prediction = PredictionAgent(self.board)
-        self.overlay = OverlayRendererAgent(self.board, self.prediction)
+        self.overlay = OverlayRendererAgent()
+        # Set the agent references in the overlay
+        self.overlay.board_processor = self.board
+        self.overlay.prediction_agent = self.prediction
 
     def handle(self, params: Optional[Dict] = None) -> None:
         if params:

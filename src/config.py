@@ -32,7 +32,13 @@ class AppConfig:
             return cls()
         with CONFIG_FILE.open("r", encoding="utf-8") as f:
             data = json.load(f)
-        return cls(**data)
+        
+        # Filter out unknown fields that aren't part of AppConfig
+        import inspect
+        app_config_fields = {name for name, _ in inspect.signature(cls).parameters.items()}
+        filtered_data = {k: v for k, v in data.items() if k in app_config_fields}
+        
+        return cls(**filtered_data)
 
     def save(self) -> None:
         with CONFIG_FILE.open("w", encoding="utf-8") as f:
