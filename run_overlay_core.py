@@ -10,7 +10,7 @@ from typing import Dict, Any
 import keyboard  # type: ignore
 import pygame
 
-from tetris_overlay_core import run_overlay, toggle_overlay, reset_calibration
+from tetris_overlay_core import run_overlay, toggle_overlay, reset_calibration, graceful_exit
 from overlay_renderer import OverlayRenderer
 from tools.calibration.calibration_ui import start_calibration
 from dual_capture import DualScreenCapture
@@ -45,6 +45,22 @@ init_db()
 # Start a new match
 start_new_match(CURRENT_SETTINGS.prediction_agent)
 
+def _toggle_logging():
+    root = logging.getLogger()
+    if root.level == logging.DEBUG:
+        root.setLevel(logging.INFO)
+        logging.info("Debug logging OFF")
+    else:
+        root.setLevel(logging.DEBUG)
+        logging.debug("Debug logging ON")
+
+def _graceful_exit():
+    """Handle graceful exit with stats cleanup."""
+    end_current_match()
+    logging.info("Esc pressed – shutting down")
+    from tetris_overlay_core import graceful_exit
+    graceful_exit()
+
 def _register_dynamic_hotkeys():
     """Register hotkeys based on current settings."""
     # Clear existing hotkeys
@@ -57,8 +73,8 @@ def _register_dynamic_hotkeys():
     keyboard.add_hotkey(hk.toggle_overlay, toggle_overlay)
     keyboard.add_hotkey(hk.open_settings, _open_settings)
     keyboard.add_hotkey(hk.open_stats, _open_stats)
-    keyboard.add_hotkey(hk.debug_logging, _toggle_debug_logging)
-    keyboard.add_hotkey(hk.quit, graceful_exit)
+    keyboard.add_hotkey(hk.debug_logging, _toggle_logging)
+    keyboard.add_hotkey(hk.quit, _graceful_exit)
     keyboard.add_hotkey(hk.calibrate, start_calibrator)
 
 def _open_settings():
@@ -237,16 +253,6 @@ def process_frames():
             LOGGER.info(f"Performance: {stats['fps']:.1f} FPS, avg {stats['avg_frame_time']*1000:.1f}ms")
 
 
-def _toggle_logging():
-    root = logging.getLogger()
-    if root.level == logging.DEBUG:
-        root.setLevel(logging.INFO)
-        logging.info("Debug logging OFF")
-    else:
-        root.setLevel(logging.DEBUG)
-        logging.debug("Debug logging ON")
-
-
 def _frame_loop():
     """Main frame processing loop - runs in separate thread."""
     while True:
@@ -256,14 +262,6 @@ def _frame_loop():
         except Exception as e:
             LOGGER.error(f"Error in frame loop: {e}")
             time.sleep(0.1)  # Prevent tight error loop
-
-
-def _graceful_exit():
-    """Handle graceful exit with stats cleanup."""
-    end_current_match()
-    logging.info("Esc pressed – shutting down")
-    from tetris_overlay_core import graceful_exit
-    graceful_exit()
 
 
 if __name__ == "__main__":
