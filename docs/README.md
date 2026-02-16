@@ -1,63 +1,68 @@
-﻿<!--- STATUS-BADGES-START --->
-# ðŸ“Š Project Status
+﻿# Tetris Overlay – Real‑time Prediction and Ghost Display
 
-| Task | Status | Note |
-|------|--------|------|
-| 1 | done | Log & tracker files initialized |
-| 2 | done | Python CI succeeded - artifacts in tetris_artifacts.zip |
-| 3 | done | -note "Linux archive created (Windows skipped)" |
-| 4 | done | -note "All unit tests passed." |
-| 5 | done | -note "CNN latency recorded." |
-| 6 | done | -note "ImGui UI launched." |
-| 7 | in_progress | -note "Updating documentation" |
-| 8 | done | -note "Verification passed; backup tetris_again_backup_20260215.zip generated." |
-<!--- STATUS-BADGES-END   --->
+A lightweight Python overlay that watches a Tetris game, extracts the board state, predicts the best placement, and draws a semi‑transparent “ghost” piece on screen.
 
-# WindSurf AI â€“ Python Prototype (Agents + Orchestrator)
+## What it does
+- **Capture** grabs the game window (dual‑monitor support).
+- **Calibration** lets you draw ROIs for boards, hold pieces, next queue, and shared UI.
+- **Extraction** converts ROIs to a 20×10 binary board and identifies the current piece.
+- **Prediction** runs one of several agents:
+  - Dellacherie heuristic (fast, tunable weights)
+  - ONNX neural network (`tetris_perfect.onnx`)
+  - Simple left‑most placement
+  - Mock perfect (for testing)
+- **Overlay** draws a ghost piece at the predicted column/rotation, click‑through and always‑on‑top.
 
-This repository contains a minimal, fully functional prototype of the WindSurf AI pipeline:
-
-- Agent-based architecture (see `src/agents/`).
-- Declarative orchestration plan (`orchestration_plan.yaml`).
-- Python pipeline (capture â†’ board processing â†’ prediction â†’ overlay).
-- Starter C++ bridge (`cpp_binding/board_processor_cpp/`).
-
-## Quick Start
-
+## Quick start
 ```bash
-python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
+python -m venv .venv
+.venv\Scripts\activate
 pip install -r requirements.txt
-python -m src.main -p orchestration_plan.yaml
+python run_overlay_core.py
+# Press Ctrl+Alt+C to calibrate, then play Tetris
 ```
 
-## Project Layout
+## Project layout
+- `run_overlay_core.py` – Main entry point; hotkeys, capture loop.
+- `roi_calibrator.py` – Interactive ROI calibration with Y/N/E/K flow.
+- `capture.py`, `dual_capture.py` – Screen capture utilities.
+- `roi_capture.py`, `shared_ui_capture.py`, `next_queue_capture.py` – ROI helpers.
+- `overlay_renderer.py` – Pygame overlay window.
+- `src/agents/` – Prediction agents (dellacherie, onnx, simple, mock).
+- `config/` – ROI and general configuration.
+- `tests/` – Pytest suite.
+- `tools/` – Helper utilities (calibration UI, window filter, etc.).
+- `docs/` – Documentation.
 
-- `src/` â€“ CLI, config, orchestrator, agents.
-- `tests/` â€“ pytest suite.
-- `cpp_binding/board_processor_cpp/` â€“ placeholder C++ bridge (pybind11 + OpenCV).
-- Documentation: `project.md`, `PROJECT_COMPLETE_STATE.md`, `agents.md`, `system.md`.
+## Configuration
+Edit `config/config.json` to choose the prediction agent:
+```json
+{
+  "prediction_agent": "dellacherie",
+  "debug_overlay": false
+}
+```
 
-See `project.md` for milestones and success criteria. 
+## Calibration
+1. Run the overlay.
+2. Press **Ctrl+Alt+C** to start calibration.
+3. Follow prompts to draw ROIs:
+   - Player boards (left/right)
+   - Hold pieces
+   - Next queue (up to 4 slots)
+   - Shared UI (score, wins, timer)
+4. ROIs are saved to `config/roi_config.json`.
 
+## Testing
+```bash
+pytest tests/test_shared_ui.py -q
+```
 
-<!--- TASKS-OVERVIEW-START --->
-## ðŸ“‹ Tasks Overview
+## Development notes
+- Target latency: ≤ 30 ms from capture to ghost.
+- Works after a single ROI calibration.
+- Supports both heuristic and ONNX prediction models.
+- Legacy/orchestrator code is archived in `legacy/` and ignored.
 
-| ID | Description | Current Status |
-|----|-------------|----------------|
-| 1 | Log & tracker cleanup | done |
-| 2 | CI pipeline verification | done |
-| 3 | Cross-platform packaging | done |
-| 4 | Unit-test suite | done |
-| 5 | CNN verification | done |
-| 6 | ImGui UI configuration | done |
-| 7 | Documentation refresh | in_progress |
-| 8 | Verification & backup | done |
-<!--- TASKS-OVERVIEW-END   --->
-
----
-
-# -tetris-overlay-test
-A copy of my screen overlay + predictions tool for backup.
-
+## License / Contributing
+Treat this as a personal project. Feel free to experiment with new prediction agents or UI improvements.
