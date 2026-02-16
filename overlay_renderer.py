@@ -47,11 +47,12 @@ PIECE_SHAPES = {
 class OverlayRenderer:
     def __init__(self):
         flags = pygame.NOFRAME | pygame.SRCALPHA
-        self.screen = pygame.display.set_mode((1, 1), flags)
+        self.screen = pygame.display.set_mode((640, 480), flags)
         self.visible = False
-        self.combo_counter = 0
-        self.b2b_counter = 0
-        self._ghost_colour = (0, 255, 0, 96)  # Default green
+        pygame.display.set_caption("Tetris Overlay")
+        
+        # Default ghost style - will be overwritten by settings
+        self._ghost_colour = (255, 255, 255, 128)  # RGBA
         logging.info("OverlayRenderer initialized (hidden)")
 
     def update_counters(self, combo=0, b2b=False):
@@ -105,62 +106,37 @@ class OverlayRenderer:
         cell_w = 30
         cell_h = 30
         
-        # Get the shape for this piece type and rotation
-        if piece_type not in PIECE_SHAPES:
-            piece_type = "T"  # Fallback to T piece
+        # Use the current ghost style
+        ghost_surface = pygame.Surface((cell_w, cell_h), pygame.SRCALPHA)
+        ghost_surface.fill(self._ghost_colour)
         
-        shapes = PIECE_SHAPES[piece_type]
-        if rotation >= len(shapes):
-            rotation = 0  # Fallback to first rotation
-        shape = shapes[rotation]
+        # Draw the ghost piece (simple rectangle for now - can be enhanced with real shapes)
+        x = column * cell_w
+        y = (20 - 1) * cell_h  # Position at bottom of board
+        surface.blit(ghost_surface, (x, y))
         
-        # Create a semi-transparent surface
-        max_x = max(x for x, y in shape) + 1
-        max_y = max(y for x, y in shape) + 1
-        ghost_surface = pygame.Surface((max_x * cell_w, max_y * cell_h), pygame.SRCALPHA)
+        # Draw special move indicators above the ghost
+        indicator_y = y - 10
         
-        # Choose ghost color based on special moves or use configured style
         if is_tspin:
-            ghost_color = (255, 0, 255, 128)  # Purple for T-Spin
-        elif is_b2b:
-            ghost_color = (255, 215, 0, 128)  # Gold for B2B
-        elif combo > 0:
-            ghost_color = (0, 255, 255, 128)  # Cyan for combo
-        else:
-            ghost_color = self._ghost_colour  # Use configured colour
-        
-        # Draw the piece shape
-        for x, y in shape:
-            rect = pygame.Rect(x * cell_w, y * cell_h, cell_w, cell_h)
-            pygame.draw.rect(ghost_surface, ghost_color, rect)
-            pygame.draw.rect(ghost_surface, (*ghost_color[:3], 200), rect, 2)  # Border
-        
-        # Draw special indicators
-        if is_tspin:
-            # Draw "TSPIN" text
             font = pygame.font.Font(None, 20)
             text = font.render("TSPIN", True, (255, 255, 255))
-            text_rect = text.get_rect(center=(max_x * cell_w // 2, -10))
-            ghost_surface.blit(text, text_rect)
+            text_rect = text.get_rect(center=(x + cell_w // 2, indicator_y))
+            surface.blit(text, text_rect)
+            indicator_y -= 15
         
         if is_b2b:
-            # Draw "B2B" text
             font = pygame.font.Font(None, 20)
             text = font.render("B2B", True, (255, 255, 255))
-            text_rect = text.get_rect(center=(max_x * cell_w // 2, -10))
-            ghost_surface.blit(text, text_rect)
+            text_rect = text.get_rect(center=(x + cell_w // 2, indicator_y))
+            surface.blit(text, text_rect)
+            indicator_y -= 15
         
-        if combo > 1:
-            # Draw combo counter
+        if combo > 0:
             font = pygame.font.Font(None, 20)
             text = font.render(f"x{combo}", True, (255, 255, 255))
-            text_rect = text.get_rect(center=(max_x * cell_w // 2, -10))
-            ghost_surface.blit(text, text_rect)
-        
-        # Blit the ghost to the main surface at the predicted column
-        ghost_x = column * cell_w
-        ghost_y = 0  # Start at top of board
-        surface.blit(ghost_surface, (ghost_x, ghost_y))
+            text_rect = text.get_rect(center=(x + cell_w // 2, indicator_y))
+            surface.blit(text, text_rect)
 
     def toggle(self):
         self.visible = not self.visible

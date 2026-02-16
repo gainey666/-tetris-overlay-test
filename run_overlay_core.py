@@ -19,6 +19,9 @@ from shared_ui_capture import capture_shared_ui
 from next_queue_capture import capture_next_queue
 from piece_detector import get_current_piece
 from performance_monitor import performance_monitor
+import pygame  # Required for pygame.display.flip()
+import threading
+import time
 from logger_config import setup_telemetry_logger
 from error_handler import error_handler
 from feature_toggles import is_feature_enabled
@@ -35,8 +38,11 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(mess
 LOGGER = setup_telemetry_logger()
 FRAME_COUNTER = 0
 
-# Load settings
+# Load settings as global CURRENT singleton
 CURRENT_SETTINGS = load_settings()
+
+# Create global overlay renderer instance
+overlay_renderer = OverlayRenderer()
 
 # Perform startup checks
 if not error_handler.check_dependencies():
@@ -76,20 +82,17 @@ def _graceful_exit():
     graceful_exit()
 
 def _register_dynamic_hotkeys():
-    """Register hotkeys based on current settings."""
-    # Clear existing hotkeys
-    try:
-        keyboard.unhook_all()
-    except:
-        pass  # keyboard library might not have unhook_all
+    """Re-register all hot-keys according to CURRENT hotkey values."""
+    import keyboard
+    keyboard.unhook_all()  # clear previous registrations
     
     hk = CURRENT_SETTINGS.hotkeys
     keyboard.add_hotkey(hk.toggle_overlay, toggle_overlay)
-    keyboard.add_hotkey(hk.open_settings, _open_settings)
-    keyboard.add_hotkey(hk.open_stats, _open_stats)
+    keyboard.add_hotkey(hk.open_settings, lambda: SettingsDialog().exec())
     keyboard.add_hotkey(hk.debug_logging, _toggle_logging)
     keyboard.add_hotkey(hk.quit, _graceful_exit)
     keyboard.add_hotkey(hk.calibrate, start_calibrator)
+    keyboard.add_hotkey(hk.open_stats, lambda: StatsDashboard().show())
 
 def _open_settings():
     """Open the settings dialog."""
@@ -176,9 +179,9 @@ def extract_board(image):
 
 
 def process_frames():
+    """Process a single frame of the overlay."""
     global FRAME_COUNTER
     
-    # Start performance monitoring
     performance_monitor.start_frame()
     capture_start_ts = time.time()
     
@@ -259,6 +262,8 @@ def process_frames():
                 tspin=pred.get("is_tspin", False),
                 latency_ms=latency_ms
             )
+        
+        FRAME_COUNTER += 1
 
         LOGGER.info(
             {
@@ -289,25 +294,33 @@ def process_frames():
             LOGGER.warning(f"Slow frame: {frame_time*1000:.1f}ms")
         
         # Log performance stats every 100 frames
-        if FRAME_COUNTER % 100 == 0:
-            stats = performance_monitor.get_stats()
-            LOGGER.info(f"Performance: {stats['fps']:.1f} FPS, avg {stats['avg_frame_time']*1000:.1f}ms")
 
 
-def _frame_loop():
-    """Main frame processing loop - runs in separate thread."""
+def _frame_worker():
+    """Runs process_frames in a loop, respects target FPS."""
+    target_fps = 30
+    frame_time = 1.0 / target_fps
     while True:
+        start = time.time()
         try:
             process_frames()
-            time.sleep(1/30)  # Target 30 FPS
-        except Exception as e:
-            LOGGER.error(f"Error in frame loop: {e}")
-            time.sleep(0.1)  # Prevent tight error loop
+        except Exception as exc:  # never let the thread crash
+            logging.error("Frame error: %s", exc, exc_info=True)
+        # sleep to keep ~30 FPS
+        elapsed = time.time() - start
+        sleep = max(0.0, frame_time - elapsed)
+        time.sleep(sleep)
 
 
 if __name__ == "__main__":
+    # Register dynamic hotkeys
+    _register_dynamic_hotkeys()
+    
+    # Start stats tracking for the current run
+    start_new_match(CURRENT_SETTINGS.prediction_agent)
+    
     # Start frame processing thread
-    threading.Thread(target=_frame_loop, daemon=True).start()
+    threading.Thread(target=_frame_worker, daemon=True).start()
     
     # Run the main overlay loop
     run_overlay()
