@@ -3,9 +3,11 @@ import json
 import logging
 import sys
 import threading
+import time
 from pathlib import Path
 
 import keyboard  # type: ignore
+import pygame
 
 from tetris_overlay_core import run_overlay, toggle_overlay, reset_calibration
 from overlay_renderer import OverlayRenderer
@@ -20,6 +22,9 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(mess
 
 LOGGER = setup_telemetry_logger()
 FRAME_COUNTER = 0
+
+# Create global overlay renderer instance
+overlay_renderer = OverlayRenderer()
 
 # Add hotkey for new calibrator
 keyboard.add_hotkey("ctrl+alt+c", lambda: start_calibrator())
@@ -80,7 +85,7 @@ def extract_board(image):
         blurred, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2
     )
     mask_resized = cv2.resize(thresh, (10, 20), interpolation=cv2.INTER_NEAREST)
-    mask_binary = np.where(mask_resized > 127, 1, 0).astype(np.uint8)
+    mask_binary = np.where(mask_resized > 0, 255, 0).astype(np.uint8)
 
     return mask_binary
 
@@ -96,10 +101,9 @@ def process_frames():
     # Predict for left board (stub: use left_board as binary matrix)
     pred = prediction_agent.handle({"board": left_board, "piece": "T", "orientation": 0})
 
-    # Draw ghost on overlay (simple placeholder)
-    overlay = OverlayRenderer()
-    if overlay.visible:
-        overlay.draw_ghost(overlay.screen, pred["target_col"], pred["target_rot"])
+    # Draw ghost on overlay (reuse global renderer instance)
+    if overlay_renderer.visible:
+        overlay_renderer.draw_ghost(overlay_renderer.screen, pred["target_col"], pred["target_rot"])
         pygame.display.flip()
 
     LOGGER.info(
@@ -135,17 +139,26 @@ def _toggle_logging():
         logging.debug("Debug logging ON")
 
 
+def _frame_loop():
+    """Main frame processing loop - runs in separate thread."""
+    while True:
+        try:
+            process_frames()
+            time.sleep(1/30)  # Target 30 FPS
+        except Exception as e:
+            LOGGER.error(f"Error in frame loop: {e}")
+            time.sleep(0.1)  # Prevent tight error loop
+
+
 def _graceful_exit():
     logging.info("Esc pressed – shutting down")
     from tetris_overlay_core import graceful_exit
-
     graceful_exit()
 
 
-# Initialize renderer after core setup
-renderer = OverlayRenderer()
-
-logging.info("Overlay core initializing – press Esc to exit")
-
-# Start the core overlay system with renderer and calibration
-run_overlay(renderer=renderer, calibration_func=start_calibration)
+if __name__ == "__main__":
+    # Start frame processing thread
+    threading.Thread(target=_frame_loop, daemon=True).start()
+    
+    # Run the main overlay loop
+    run_overlay()
