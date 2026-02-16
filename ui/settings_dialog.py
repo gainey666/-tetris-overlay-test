@@ -241,7 +241,7 @@ class SettingsDialog(QDialog):
         m = re.search(r"rgb\((\d+),(\d+),(\d+)\)", style)
         if m:
             r,g,b = map(int, m.groups())
-            s.ghost = Settings.GhostStyle(colour=(r,g,b), opacity=self.opacity_slider.value()/100.0)
+            s.ghost = GhostStyle(colour=(r,g,b), opacity=self.opacity_slider.value()/100.0)
 
         # Hotkeys
         hk = Settings.Hotkeys()

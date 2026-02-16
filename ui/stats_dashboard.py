@@ -11,6 +11,7 @@ from PySide6.QtCore import Qt, QAbstractTableModel, QModelIndex
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 import matplotlib.pyplot as plt
 from stats.db import get_session, Match, Event, init_db
+from sqlmodel import select
 from collections import Counter
 
 class MatchTableModel(QAbstractTableModel):

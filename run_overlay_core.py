@@ -20,6 +20,7 @@ from next_queue_capture import capture_next_queue
 from piece_detector import get_current_piece
 from performance_monitor import performance_monitor
 from logger_config import setup_telemetry_logger
+from error_handler import error_handler
 
 # New imports for settings and stats
 from ui.settings_storage import load as load_settings, save as save_settings
@@ -35,6 +36,17 @@ FRAME_COUNTER = 0
 
 # Load settings
 CURRENT_SETTINGS = load_settings()
+
+# Perform startup checks
+if not error_handler.check_dependencies():
+    logging.error("Dependency check failed. Exiting.")
+    sys.exit(1)
+
+if not error_handler.check_game_window():
+    logging.warning("No game window found. Will try fallback mode.")
+
+if not error_handler.check_roi_config():
+    logging.warning("ROI configuration incomplete. Please run calibrator.")
 
 # Create global overlay renderer instance
 overlay_renderer = OverlayRenderer()
@@ -175,11 +187,28 @@ def process_frames():
         shared = capture_shared_ui()
         queue_images = capture_next_queue()
 
+    except Exception as e:
+        # Handle screen capture errors gracefully
+        if not error_handler.handle_critical_error(e, "Screen Capture"):
+            raise  # Re-raise if user chose to exit
+        
+        # Fallback: use dummy data
+        left_board = [[0] * 10 for _ in range(20)]
+        right_board = [[0] * 10 for _ in range(20)]
+        shared = {}
+        queue_images = []
+        error_handler.handle_warning("Using fallback data due to capture error", "Frame Processing")
+
         # Get current piece from queue (fallback to "T" if detection fails)
         current_piece = get_current_piece() or "T"
 
-        # Predict for left board with actual current piece
-        pred = prediction_agent.handle({"board": left_board, "piece": current_piece, "orientation": 0})
+        try:
+            pred = prediction_agent.handle({"board": left_board, "piece": current_piece, "orientation": 0})
+        except Exception as e:
+            # Handle prediction errors gracefully
+            error_handler.handle_warning(f"Prediction error: {e}", "AI Prediction")
+            # Fallback prediction
+            pred = {"piece": current_piece, "target_col": 3, "target_rot": 0, "combo": 0, "is_b2b": False, "is_tspin": False}
 
         # Draw ghost on overlay (reuse global renderer instance)
         if overlay_renderer.visible and CURRENT_SETTINGS.show_combo:
