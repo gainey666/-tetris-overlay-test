@@ -24,6 +24,11 @@ telemetry.log
 *.log
 Capture*.PNG
 game_screenshots/
+*.png
+*.jpg
+*.jpeg
+*.bmp
+*.gif
 *.pyproj.user
 *.swp
 personia/
