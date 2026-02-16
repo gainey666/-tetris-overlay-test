@@ -26,6 +26,17 @@
     "**/*.log",
     "**/*.tmp",
     "**/temp/**",
-    "**/cache/**"
+    "**/cache/**",
+    "**/.venv/**",
+    "**/legacy/**",
+    "**/artifacts/**",
+    "**/game_screenshots/**",
+    "**/*.png",
+    "**/*.jpg",
+    "**/*.jpeg",
+    "**/*.bmp",
+    "**/*.gif",
+    "**/verification_temp/**",
+    "**/tetris-artifacts/**"
   ]
 }

@@ -17,6 +17,7 @@ from dual_capture import DualScreenCapture
 from roi_calibrator import start_calibrator
 from shared_ui_capture import capture_shared_ui
 from next_queue_capture import capture_next_queue
+from piece_detector import get_current_piece
 from logger_config import setup_telemetry_logger
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
@@ -99,13 +100,16 @@ def process_frames():
     shared = capture_shared_ui()
     queue_images = capture_next_queue()
 
-    # Predict for left board (stub: use left_board as binary matrix)
-    pred = prediction_agent.handle({"board": left_board, "piece": "T", "orientation": 0})
+    # Get current piece from queue (fallback to "T" if detection fails)
+    current_piece = get_current_piece() or "T"
+
+    # Predict for left board with actual current piece
+    pred = prediction_agent.handle({"board": left_board, "piece": current_piece, "orientation": 0})
 
     # Draw ghost on overlay (reuse global renderer instance)
     if overlay_renderer.visible:
-        # Extract piece type from prediction if available, otherwise use "T"
-        piece_type = pred.get("piece", "T")
+        # Extract piece type from prediction if available, otherwise use detected piece
+        piece_type = pred.get("piece", current_piece)
         overlay_renderer.draw_ghost(overlay_renderer.screen, pred["target_col"], pred["target_rot"], piece_type)
         pygame.display.flip()
 
