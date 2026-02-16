@@ -11,3 +11,28 @@ def test_roi_to_binary_matrix():
     assert mat.shape == (20, 10)
     # Verify the matrix uses 0/255 values (not 0/1)
     assert set(np.unique(mat)).issubset({0, 255})
+
+def test_ghost_shape_rendering():
+    import pygame
+    from overlay_renderer import OverlayRenderer, PIECE_SHAPES
+    pygame.init()
+    
+    # Test that all piece shapes are defined
+    expected_pieces = ["I", "O", "T", "S", "Z", "J", "L"]
+    for piece in expected_pieces:
+        assert piece in PIECE_SHAPES
+        assert len(PIECE_SHAPES[piece]) > 0
+        # Each shape should have 4 blocks
+        for shape in PIECE_SHAPES[piece]:
+            assert len(shape) == 4
+            # Each block should be a (x, y) coordinate
+            for block in shape:
+                assert isinstance(block, tuple) and len(block) == 2
+    
+    # Test ghost rendering doesn't crash
+    renderer = OverlayRenderer()
+    surface = pygame.Surface((300, 600), pygame.SRCALPHA)
+    renderer.draw_ghost(surface, column=5, rotation=0, piece_type="T")
+    renderer.draw_ghost(surface, column=3, rotation=1, piece_type="I")
+    
+    pygame.quit()

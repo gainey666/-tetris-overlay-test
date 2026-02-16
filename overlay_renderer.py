@@ -6,6 +6,43 @@ from window_manager import load_cache
 
 pygame.init()
 
+# Tetromino shapes (same as in prediction_agent_dellacherie.py)
+PIECE_SHAPES = {
+    "I": [
+        [(0, 0), (1, 0), (2, 0), (3, 0)],
+        [(0, 0), (0, 1), (0, 2), (0, 3)],
+    ],
+    "O": [
+        [(0, 0), (1, 0), (0, 1), (1, 1)],
+    ],
+    "T": [
+        [(1, 0), (0, 1), (1, 1), (2, 1)],
+        [(1, 0), (0, 1), (1, 1), (1, 2)],
+        [(0, 0), (1, 0), (2, 0), (1, 1)],
+        [(1, 0), (1, 1), (2, 1), (1, 2)],
+    ],
+    "S": [
+        [(1, 0), (2, 0), (0, 1), (1, 1)],
+        [(0, 0), (0, 1), (1, 1), (1, 2)],
+    ],
+    "Z": [
+        [(0, 0), (1, 0), (1, 1), (2, 1)],
+        [(1, 0), (0, 1), (1, 1), (0, 2)],
+    ],
+    "J": [
+        [(0, 0), (0, 1), (1, 1), (2, 1)],
+        [(1, 0), (2, 0), (1, 1), (1, 2)],
+        [(0, 0), (1, 0), (2, 0), (2, 1)],
+        [(1, 0), (1, 1), (0, 2), (1, 2)],
+    ],
+    "L": [
+        [(2, 0), (0, 1), (1, 1), (2, 1)],
+        [(1, 0), (1, 1), (1, 2), (2, 2)],
+        [(0, 0), (1, 0), (2, 0), (0, 1)],
+        [(0, 0), (1, 0), (1, 1), (1, 2)],
+    ],
+}
+
 
 class OverlayRenderer:
     def __init__(self):
@@ -15,14 +52,35 @@ class OverlayRenderer:
         logging.info("OverlayRenderer initialized (hidden)")
 
     def draw_ghost(self, surface, column, rotation, piece_type="T"):
-        """Draw a semi-transparent ghost piece at the given column/rotation."""
-        # Simple placeholder: draw a rectangle at column*cell_width
+        """Draw a semi-transparent ghost piece with actual tetromino shape."""
         cell_w = 30
         cell_h = 30
-        x = column * cell_w
-        y = 0
-        color = (255, 255, 255, 128)  # semi-transparent white
-        pygame.draw.rect(surface, color, (x, y, cell_w * 4, cell_h * 4), 2)
+        
+        # Get the shape for this piece type and rotation
+        if piece_type not in PIECE_SHAPES:
+            piece_type = "T"  # Fallback to T piece
+        
+        shapes = PIECE_SHAPES[piece_type]
+        if rotation >= len(shapes):
+            rotation = 0  # Fallback to first rotation
+        shape = shapes[rotation]
+        
+        # Create a semi-transparent surface
+        max_x = max(x for x, y in shape) + 1
+        max_y = max(y for x, y in shape) + 1
+        ghost_surface = pygame.Surface((max_x * cell_w, max_y * cell_h), pygame.SRCALPHA)
+        
+        # Draw the piece shape
+        ghost_color = (0, 255, 0, 96)  # Semi-transparent green
+        for x, y in shape:
+            rect = pygame.Rect(x * cell_w, y * cell_h, cell_w, cell_h)
+            pygame.draw.rect(ghost_surface, ghost_color, rect)
+            pygame.draw.rect(ghost_surface, (0, 255, 0, 128), rect, 2)  # Border
+        
+        # Blit the ghost to the main surface at the predicted column
+        ghost_x = column * cell_w
+        ghost_y = 0  # Start at top of board
+        surface.blit(ghost_surface, (ghost_x, ghost_y))
 
     def toggle(self):
         self.visible = not self.visible

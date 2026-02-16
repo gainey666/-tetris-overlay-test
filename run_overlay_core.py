@@ -5,6 +5,7 @@ import sys
 import threading
 import time
 from pathlib import Path
+from typing import Dict, Any
 
 import keyboard  # type: ignore
 import pygame
@@ -30,7 +31,7 @@ overlay_renderer = OverlayRenderer()
 keyboard.add_hotkey("ctrl+alt+c", lambda: start_calibrator())
 
 
-def load_prediction_agent(agent_name: str):
+def load_prediction_agent(agent_name: str) -> Any:
     """Dynamically import and instantiate a prediction agent."""
     if agent_name == "dellacherie":
         from src.agents.prediction_agent_dellacherie import PredictionAgent
@@ -103,7 +104,9 @@ def process_frames():
 
     # Draw ghost on overlay (reuse global renderer instance)
     if overlay_renderer.visible:
-        overlay_renderer.draw_ghost(overlay_renderer.screen, pred["target_col"], pred["target_rot"])
+        # Extract piece type from prediction if available, otherwise use "T"
+        piece_type = pred.get("piece", "T")
+        overlay_renderer.draw_ghost(overlay_renderer.screen, pred["target_col"], pred["target_rot"], piece_type)
         pygame.display.flip()
 
     LOGGER.info(
