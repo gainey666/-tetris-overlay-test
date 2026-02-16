@@ -1,0 +1,55 @@
+# .codeiumignore - gitignore syntax for Windsurf indexing
+
+# Large binary / data folders
+vcpkg/
+build/
+TetrisOverlay/
+node_modules/
+dist/
+*.egg-info/
+*.zip
+*.onnx
+tools/
+downloads/
+buildtrees/
+packages/
+installed/
+cpp_binding/
+
+# Binary files
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Test and debug files
+test_*.py
+debug_*.py
+*.log
+*.tmp
+temp/
+cache/
+
+# Python caches
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# Legacy and artifacts
+legacy/
+artifacts/
+game_screenshots/
+verification_temp/
+tetris-artifacts/
+
+# Image files
+*.png
+*.jpg
+*.jpeg
+*.bmp
+*.gif
+
+# IDE files
+.idea/
+.vscode/
