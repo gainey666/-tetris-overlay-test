@@ -51,12 +51,17 @@ class OverlayRenderer:
         self.visible = False
         self.combo_counter = 0
         self.b2b_counter = 0
+        self._ghost_colour = (0, 255, 0, 96)  # Default green
         logging.info("OverlayRenderer initialized (hidden)")
 
     def update_counters(self, combo=0, b2b=False):
         """Update combo and B2B counters for display."""
         self.combo_counter = combo
         self.b2b_counter = self.b2b_counter + 1 if b2b else 0
+
+    def update_ghost_style(self, colour: tuple[int, int, int], opacity: float):
+        """Update ghost piece colour and opacity."""
+        self._ghost_colour = (*colour, int(opacity * 255))
 
     def draw_stats(self, surface):
         """Draw combo and B2B stats on the overlay."""
@@ -92,7 +97,7 @@ class OverlayRenderer:
         max_y = max(y for x, y in shape) + 1
         ghost_surface = pygame.Surface((max_x * cell_w, max_y * cell_h), pygame.SRCALPHA)
         
-        # Choose ghost color based on special moves
+        # Choose ghost color based on special moves or use configured style
         if is_tspin:
             ghost_color = (255, 0, 255, 128)  # Purple for T-Spin
         elif is_b2b:
@@ -100,7 +105,7 @@ class OverlayRenderer:
         elif combo > 0:
             ghost_color = (0, 255, 255, 128)  # Cyan for combo
         else:
-            ghost_color = (0, 255, 0, 96)  # Green for normal
+            ghost_color = self._ghost_colour  # Use configured colour
         
         # Draw the piece shape
         for x, y in shape:

@@ -21,16 +21,71 @@ from piece_detector import get_current_piece
 from performance_monitor import performance_monitor
 from logger_config import setup_telemetry_logger
 
+# New imports for settings and stats
+from ui.settings_storage import load as load_settings, save as save_settings
+from ui.settings_dialog import SettingsDialog
+from ui.stats_dashboard import StatsDashboard
+from stats.db import init_db
+from stats.collector import start_new_match, end_current_match, record_event
+
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 
 LOGGER = setup_telemetry_logger()
 FRAME_COUNTER = 0
 
+# Load settings
+CURRENT_SETTINGS = load_settings()
+
 # Create global overlay renderer instance
 overlay_renderer = OverlayRenderer()
 
-# Add hotkey for new calibrator
-keyboard.add_hotkey("ctrl+alt+c", lambda: start_calibrator())
+# Initialize database
+init_db()
+
+# Start a new match
+start_new_match(CURRENT_SETTINGS.prediction_agent)
+
+def _register_dynamic_hotkeys():
+    """Register hotkeys based on current settings."""
+    # Clear existing hotkeys
+    try:
+        keyboard.unhook_all()
+    except:
+        pass  # keyboard library might not have unhook_all
+    
+    hk = CURRENT_SETTINGS.hotkeys
+    keyboard.add_hotkey(hk.toggle_overlay, toggle_overlay)
+    keyboard.add_hotkey(hk.open_settings, _open_settings)
+    keyboard.add_hotkey(hk.open_stats, _open_stats)
+    keyboard.add_hotkey(hk.debug_logging, _toggle_debug_logging)
+    keyboard.add_hotkey(hk.quit, graceful_exit)
+    keyboard.add_hotkey(hk.calibrate, start_calibrator)
+
+def _open_settings():
+    """Open the settings dialog."""
+    dialog = SettingsDialog()
+    dialog.settings_changed.connect(_on_settings_changed)
+    dialog.exec()
+
+def _open_stats():
+    """Open the statistics dashboard."""
+    dashboard = StatsDashboard()
+    dashboard.show()
+
+def _on_settings_changed(new_settings):
+    """Handle settings changes."""
+    global CURRENT_SETTINGS
+    CURRENT_SETTINGS = new_settings
+    _register_dynamic_hotkeys()
+    
+    # Update overlay renderer with new ghost style
+    overlay_renderer.update_ghost_style(
+        colour=new_settings.ghost.colour,
+        opacity=new_settings.ghost.opacity,
+    )
+
+# Register initial hotkeys
+_register_dynamic_hotkeys()
 
 
 def load_prediction_agent(agent_name: str) -> Any:
@@ -51,15 +106,8 @@ def load_prediction_agent(agent_name: str) -> Any:
         raise ValueError(f"Unknown prediction_agent: {agent_name}")
 
 
-# Load prediction agent from config
-CONFIG_PATH = Path("config/config.json")
-if CONFIG_PATH.is_file():
-    cfg = json.loads(CONFIG_PATH.read_text())
-    prediction_agent_name = cfg.get("prediction_agent", "dellacherie")
-else:
-    prediction_agent_name = "dellacherie"
-
-prediction_agent = load_prediction_agent(prediction_agent_name)
+# Load prediction agent based on settings
+prediction_agent = load_prediction_agent(CURRENT_SETTINGS.prediction_agent)
 
 
 def roi_to_binary_matrix(roi_image):
@@ -98,6 +146,7 @@ def process_frames():
     
     # Start performance monitoring
     performance_monitor.start_frame()
+    capture_start_ts = time.time()
     
     try:
         left_img, right_img = DualScreenCapture().grab()
@@ -113,7 +162,7 @@ def process_frames():
         pred = prediction_agent.handle({"board": left_board, "piece": current_piece, "orientation": 0})
 
         # Draw ghost on overlay (reuse global renderer instance)
-        if overlay_renderer.visible:
+        if overlay_renderer.visible and CURRENT_SETTINGS.show_combo:
             # Extract piece type from prediction if available, otherwise use detected piece
             piece_type = pred.get("piece", current_piece)
             
@@ -140,6 +189,19 @@ def process_frames():
             overlay_renderer.draw_stats(overlay_renderer.screen)
             
             pygame.display.flip()
+
+        # Record statistics
+        latency_ms = (time.time() - capture_start_ts) * 1000
+        record_event(
+            frame=FRAME_COUNTER,
+            piece=pred.get("piece", current_piece),
+            orientation=pred.get("target_rot", 0),
+            lines_cleared=shared.get("lines_cleared", 0),
+            combo=pred.get("combo", 0),
+            b2b=pred.get("is_b2b", False),
+            tspin=pred.get("is_tspin", False),
+            latency_ms=latency_ms
+        )
 
         LOGGER.info(
             {
@@ -197,6 +259,8 @@ def _frame_loop():
 
 
 def _graceful_exit():
+    """Handle graceful exit with stats cleanup."""
+    end_current_match()
     logging.info("Esc pressed – shutting down")
     from tetris_overlay_core import graceful_exit
     graceful_exit()
