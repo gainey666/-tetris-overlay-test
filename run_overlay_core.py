@@ -110,7 +110,29 @@ def process_frames():
     if overlay_renderer.visible:
         # Extract piece type from prediction if available, otherwise use detected piece
         piece_type = pred.get("piece", current_piece)
-        overlay_renderer.draw_ghost(overlay_renderer.screen, pred["target_col"], pred["target_rot"], piece_type)
+        
+        # Get special move indicators from prediction
+        is_tspin = pred.get("is_tspin", False)
+        is_b2b = pred.get("is_b2b", False)
+        combo = pred.get("combo", 0)
+        
+        # Update overlay counters
+        overlay_renderer.update_counters(combo, is_b2b)
+        
+        # Draw ghost piece
+        overlay_renderer.draw_ghost(
+            overlay_renderer.screen, 
+            pred["target_col"], 
+            pred["target_rot"], 
+            piece_type,
+            is_tspin,
+            is_b2b,
+            combo
+        )
+        
+        # Draw stats (combo, B2B)
+        overlay_renderer.draw_stats(overlay_renderer.screen)
+        
         pygame.display.flip()
 
     LOGGER.info(

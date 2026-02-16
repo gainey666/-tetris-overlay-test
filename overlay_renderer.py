@@ -49,10 +49,32 @@ class OverlayRenderer:
         flags = pygame.NOFRAME | pygame.SRCALPHA
         self.screen = pygame.display.set_mode((1, 1), flags)
         self.visible = False
+        self.combo_counter = 0
+        self.b2b_counter = 0
         logging.info("OverlayRenderer initialized (hidden)")
 
-    def draw_ghost(self, surface, column, rotation, piece_type="T"):
-        """Draw a semi-transparent ghost piece with actual tetromino shape."""
+    def update_counters(self, combo=0, b2b=False):
+        """Update combo and B2B counters for display."""
+        self.combo_counter = combo
+        self.b2b_counter = self.b2b_counter + 1 if b2b else 0
+
+    def draw_stats(self, surface):
+        """Draw combo and B2B stats on the overlay."""
+        if self.combo_counter > 1 or self.b2b_counter > 0:
+            font = pygame.font.Font(None, 24)
+            
+            # Draw combo counter
+            if self.combo_counter > 1:
+                combo_text = font.render(f"Combo x{self.combo_counter}", True, (255, 255, 255))
+                surface.blit(combo_text, (10, 10))
+            
+            # Draw B2B counter
+            if self.b2b_counter > 0:
+                b2b_text = font.render(f"B2B x{self.b2b_counter}", True, (255, 215, 0))
+                surface.blit(b2b_text, (10, 40))
+
+    def draw_ghost(self, surface, column, rotation, piece_type="T", is_tspin=False, is_b2b=False, combo=0):
+        """Draw a semi-transparent ghost piece with special move indicators."""
         cell_w = 30
         cell_h = 30
         
@@ -70,12 +92,43 @@ class OverlayRenderer:
         max_y = max(y for x, y in shape) + 1
         ghost_surface = pygame.Surface((max_x * cell_w, max_y * cell_h), pygame.SRCALPHA)
         
+        # Choose ghost color based on special moves
+        if is_tspin:
+            ghost_color = (255, 0, 255, 128)  # Purple for T-Spin
+        elif is_b2b:
+            ghost_color = (255, 215, 0, 128)  # Gold for B2B
+        elif combo > 0:
+            ghost_color = (0, 255, 255, 128)  # Cyan for combo
+        else:
+            ghost_color = (0, 255, 0, 96)  # Green for normal
+        
         # Draw the piece shape
-        ghost_color = (0, 255, 0, 96)  # Semi-transparent green
         for x, y in shape:
             rect = pygame.Rect(x * cell_w, y * cell_h, cell_w, cell_h)
             pygame.draw.rect(ghost_surface, ghost_color, rect)
-            pygame.draw.rect(ghost_surface, (0, 255, 0, 128), rect, 2)  # Border
+            pygame.draw.rect(ghost_surface, (*ghost_color[:3], 200), rect, 2)  # Border
+        
+        # Draw special indicators
+        if is_tspin:
+            # Draw "TSPIN" text
+            font = pygame.font.Font(None, 20)
+            text = font.render("TSPIN", True, (255, 255, 255))
+            text_rect = text.get_rect(center=(max_x * cell_w // 2, -10))
+            ghost_surface.blit(text, text_rect)
+        
+        if is_b2b:
+            # Draw "B2B" text
+            font = pygame.font.Font(None, 20)
+            text = font.render("B2B", True, (255, 255, 255))
+            text_rect = text.get_rect(center=(max_x * cell_w // 2, -10))
+            ghost_surface.blit(text, text_rect)
+        
+        if combo > 1:
+            # Draw combo counter
+            font = pygame.font.Font(None, 20)
+            text = font.render(f"x{combo}", True, (255, 255, 255))
+            text_rect = text.get_rect(center=(max_x * cell_w // 2, -10))
+            ghost_surface.blit(text, text_rect)
         
         # Blit the ghost to the main surface at the predicted column
         ghost_x = column * cell_w

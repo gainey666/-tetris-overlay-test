@@ -32,7 +32,13 @@ def test_ghost_shape_rendering():
     # Test ghost rendering doesn't crash
     renderer = OverlayRenderer()
     surface = pygame.Surface((300, 600), pygame.SRCALPHA)
+    
+    # Test normal ghost
     renderer.draw_ghost(surface, column=5, rotation=0, piece_type="T")
-    renderer.draw_ghost(surface, column=3, rotation=1, piece_type="I")
+    
+    # Test special move indicators
+    renderer.draw_ghost(surface, column=3, rotation=1, piece_type="I", is_tspin=True)
+    renderer.draw_ghost(surface, column=2, rotation=0, piece_type="O", is_b2b=True)
+    renderer.draw_ghost(surface, column=4, rotation=2, piece_type="S", combo=3)
     
     pygame.quit()
