@@ -27,29 +27,8 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Run unit-tests (if any)
-        run: |
-          if (Test-Path .\tests) {
-            python -m unittest discover -s tests
-          } else {
-            Write-Host "No tests folder - skipping."
-          }
+      - name: Test overlay imports
+        run: python -c "import run_overlay_core; import overlay_renderer"
 
-      - name: Run benchmark (200ms)
-        run: |
-          python src/main.py --benchmark 200 > benchmark.txt
-          type benchmark.txt
-
-      - name: Collect artifacts
-        run: |
-          mkdir artifacts
-          copy /Y src\tetris_overlay.exe artifacts\ 2>$null
-          copy /Y benchmark.txt artifacts\ 2>$null
-          copy /Y calibration.json artifacts\ 2>$null
-        shell: cmd
-
-      - name: Archive artifacts
-        uses: actions/upload-artifact@v3
-        with:
-          name: tetris-artifacts
-          path: artifacts\
+      - name: Run tiny tests
+        run: pytest -q
