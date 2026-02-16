@@ -6,6 +6,12 @@ on:
   pull_request:
     branches: [ main ]
 
+# Disable notifications for this workflow
+permissions:
+  contents: read
+  issues: read
+  pull-requests: read
+
 jobs:
   test:
     runs-on: windows-latest
