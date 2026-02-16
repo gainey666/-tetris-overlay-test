@@ -18,6 +18,7 @@ from roi_calibrator import start_calibrator
 from shared_ui_capture import capture_shared_ui
 from next_queue_capture import capture_next_queue
 from piece_detector import get_current_piece
+from performance_monitor import performance_monitor
 from logger_config import setup_telemetry_logger
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
@@ -94,68 +95,84 @@ def extract_board(image):
 
 def process_frames():
     global FRAME_COUNTER
-    left_img, right_img = DualScreenCapture().grab()
-    left_board = extract_board(left_img)
-    right_board = extract_board(right_img)
-    shared = capture_shared_ui()
-    queue_images = capture_next_queue()
+    
+    # Start performance monitoring
+    performance_monitor.start_frame()
+    
+    try:
+        left_img, right_img = DualScreenCapture().grab()
+        left_board = extract_board(left_img)
+        right_board = extract_board(right_img)
+        shared = capture_shared_ui()
+        queue_images = capture_next_queue()
 
-    # Get current piece from queue (fallback to "T" if detection fails)
-    current_piece = get_current_piece() or "T"
+        # Get current piece from queue (fallback to "T" if detection fails)
+        current_piece = get_current_piece() or "T"
 
-    # Predict for left board with actual current piece
-    pred = prediction_agent.handle({"board": left_board, "piece": current_piece, "orientation": 0})
+        # Predict for left board with actual current piece
+        pred = prediction_agent.handle({"board": left_board, "piece": current_piece, "orientation": 0})
 
-    # Draw ghost on overlay (reuse global renderer instance)
-    if overlay_renderer.visible:
-        # Extract piece type from prediction if available, otherwise use detected piece
-        piece_type = pred.get("piece", current_piece)
-        
-        # Get special move indicators from prediction
-        is_tspin = pred.get("is_tspin", False)
-        is_b2b = pred.get("is_b2b", False)
-        combo = pred.get("combo", 0)
-        
-        # Update overlay counters
-        overlay_renderer.update_counters(combo, is_b2b)
-        
-        # Draw ghost piece
-        overlay_renderer.draw_ghost(
-            overlay_renderer.screen, 
-            pred["target_col"], 
-            pred["target_rot"], 
-            piece_type,
-            is_tspin,
-            is_b2b,
-            combo
+        # Draw ghost on overlay (reuse global renderer instance)
+        if overlay_renderer.visible:
+            # Extract piece type from prediction if available, otherwise use detected piece
+            piece_type = pred.get("piece", current_piece)
+            
+            # Get special move indicators from prediction
+            is_tspin = pred.get("is_tspin", False)
+            is_b2b = pred.get("is_b2b", False)
+            combo = pred.get("combo", 0)
+            
+            # Update overlay counters
+            overlay_renderer.update_counters(combo, is_b2b)
+            
+            # Draw ghost piece
+            overlay_renderer.draw_ghost(
+                overlay_renderer.screen, 
+                pred["target_col"], 
+                pred["target_rot"], 
+                piece_type,
+                is_tspin,
+                is_b2b,
+                combo
+            )
+            
+            # Draw stats (combo, B2B)
+            overlay_renderer.draw_stats(overlay_renderer.screen)
+            
+            pygame.display.flip()
+
+        LOGGER.info(
+            {
+                "ts": datetime.datetime.utcnow().isoformat(),
+                "frame_id": FRAME_COUNTER,
+                "score_w": shared["score"].size[0],
+                "score_h": shared["score"].size[1],
+                "wins_w": shared["wins"].size[0],
+                "wins_h": shared["wins"].size[1],
+                "timer_w": shared["timer"].size[0],
+                "timer_h": shared["timer"].size[1],
+                "piece": current_piece,
+                "prediction": pred
+            }
         )
         
-        # Draw stats (combo, B2B)
-        overlay_renderer.draw_stats(overlay_renderer.screen)
+        FRAME_COUNTER += 1
         
-        pygame.display.flip()
-
-    LOGGER.info(
-        {
-            "ts": datetime.datetime.utcnow().isoformat(),
-            "frame_id": FRAME_COUNTER,
-            "score_w": shared["score"].size[0],
-            "score_h": shared["score"].size[1],
-            "wins_w": shared["wins"].size[0],
-            "wins_h": shared["wins"].size[1],
-            "timer_w": shared["timer"].size[0],
-            "timer_h": shared["timer"].size[1],
-            "queue_len": len(queue_images),
-        }
-    )
-    FRAME_COUNTER += 1
-
-    # Simple processing without complex agents for now
-    print(
-        "Processed boards - Left: %s, Right: %s, Shared: %s, Queue len: %d"
-        % (left_board.shape, right_board.shape, list(shared.keys()), len(queue_images))
-    )
-    logging.info("Dual board processing successful")
+    except Exception as e:
+        LOGGER.error(f"Error in frame {FRAME_COUNTER}: {e}")
+    
+    finally:
+        # End performance monitoring
+        frame_time = performance_monitor.end_frame()
+        
+        # Log performance warnings if needed
+        if frame_time > 0.050:  # 50ms threshold
+            LOGGER.warning(f"Slow frame: {frame_time*1000:.1f}ms")
+        
+        # Log performance stats every 100 frames
+        if FRAME_COUNTER % 100 == 0:
+            stats = performance_monitor.get_stats()
+            LOGGER.info(f"Performance: {stats['fps']:.1f} FPS, avg {stats['avg_frame_time']*1000:.1f}ms")
 
 
 def _toggle_logging():
