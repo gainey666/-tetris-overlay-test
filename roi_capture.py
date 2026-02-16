@@ -9,7 +9,7 @@ from typing import Any, Dict
 
 from capture import ScreenCapture
 
-CONFIG_PATH = Path("roi_config.json")
+CONFIG_PATH = Path("config/roi_config.json")
 
 log = logging.getLogger(__name__)
 

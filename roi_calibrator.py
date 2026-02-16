@@ -8,7 +8,7 @@ import mss
 from capture import ScreenCapture
 from dual_roi_manager import set_roi_pair
 
-ROI_CONFIG_PATH = Path("roi_config.json")
+ROI_CONFIG_PATH = Path("config/roi_config.json")
 
 ROI_SEQUENCE = [
     ("player_left_board", "Draw PLAYER LEFT board (main grid)."),

@@ -7,7 +7,7 @@ import keyboard  # type: ignore
 
 from tetris_overlay_core import run_overlay, toggle_overlay, reset_calibration
 from overlay_renderer import OverlayRenderer
-from calibration_ui import start_calibration
+from tools.calibration.calibration_ui import start_calibration
 from dual_capture import DualScreenCapture
 from roi_calibrator import start_calibrator
 from shared_ui_capture import capture_shared_ui
