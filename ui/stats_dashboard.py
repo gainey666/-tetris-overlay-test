@@ -1,15 +1,23 @@
-"""Qt Statistics Dashboard with charts."""
+"""Qt Statistics Dashboard with charts and export functionality."""
 
 import sys
-import csv
 import json
+from datetime import datetime, timedelta
+from typing import List, Dict, Any
 from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QTableView,
-    QPushButton, QMessageBox, QFileDialog, QApplication
+    QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QTableWidget,
+    QTableWidgetItem, QPushButton, QLabel, QComboBox, QDateEdit,
+    QFileDialog, QMessageBox, QTabWidget, QGroupBox, QSpinBox,
+    QTextEdit, QSplitter
 )
-from PySide6.QtCore import Qt, QAbstractTableModel, QModelIndex
-from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
+from PySide6.QtCore import Qt, QDate, QTimer, QAbstractTableModel, QModelIndex
+from PySide6.QtGui import QPainter, QFont
 import matplotlib.pyplot as plt
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.figure import Figure
+import mplcursors
+
+from stats.service import stats_service, MatchStats
 from stats.db import get_session, Match, Event, init_db
 from sqlmodel import select
 from collections import Counter
@@ -64,40 +72,17 @@ class MatchTableModel(QAbstractTableModel):
         self.endResetModel()
 
 
-class StatsDashboard(QWidget):
-    """Main statistics dashboard window."""
+class StatsDashboard(QMainWindow):
+    """Enhanced Statistics Dashboard with charts, filtering, and export."""
+    
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Tetris Overlay – Statistics")
-        self.resize(900, 600)
-
-        layout = QHBoxLayout(self)
-
-        # ---------- Left: match table ----------
-        self.table = QTableView()
-        self.model = MatchTableModel()
-        self.table.setModel(self.model)
-        self.table.setSelectionBehavior(QTableView.SelectRows)
-        self.table.setSelectionMode(QTableView.SingleSelection)
-        layout.addWidget(self.table, 1)
-
-        # ---------- Right: charts ----------
-        right = QVBoxLayout()
+        self.setWindowTitle("Tetris Overlay - Statistics Dashboard")
+        self.setGeometry(100, 100, 1200, 800)
         
-        # Score over time chart
-        self.fig_score, self.ax_score = plt.subplots(figsize=(4, 3))
-        self.canvas_score = FigureCanvas(self.fig_score)
-        right.addWidget(self.canvas_score, 2)
-
-        # Combo streak chart
-        self.fig_combo, self.ax_combo = plt.subplots(figsize=(4, 3))
-        self.canvas_combo = FigureCanvas(self.fig_combo)
-        right.addWidget(self.canvas_combo, 2)
-
-        # Piece distribution chart
-        self.fig_piece, self.ax_piece = plt.subplots(figsize=(4, 3))
-        self.canvas_piece = FigureCanvas(self.fig_piece)
-        right.addWidget(self.canvas_piece, 2)
+        # Data
+        self.matches: List[MatchStats] = []
+        self.filtered_matches: List[MatchStats] = []
 
         # ---------- Export buttons ----------
         btn_layout = QHBoxLayout()

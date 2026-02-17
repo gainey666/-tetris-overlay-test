@@ -2,6 +2,22 @@
 import numpy as np
 from .base_agent import BaseAgent
 
+# Import our logger bridge
+try:
+    import logger_bridge as log
+
+# Import global function tracer
+try:
+    from tracer.client import safe_trace_calls as trace_calls
+    TRACER_AVAILABLE = True
+except ImportError:
+    TRACER_AVAILABLE = False
+
+    LOGGER_AVAILABLE = True
+except ImportError:
+    LOGGER_AVAILABLE = False
+
+
 # ----------------------------------------------------------------------
 # Helper: generate all legal placements for a given piece & orientation
 # ----------------------------------------------------------------------
@@ -68,15 +84,18 @@ class PredictionAgent(BaseAgent):
     """
 
     def __init__(self):
+    @trace_calls('__init__', 'prediction_agent_dellacherie.py', 86)
         self.prev_clear = 0  # lines cleared in previous move (for B2B)
         self.prev_was_tspin = False  # for B2B chain detection
         self.combo = 0  # ongoing combo counter
 
     def start(self):
+    @trace_calls('start', 'prediction_agent_dellacherie.py', 91)
         """No-op for compatibility with existing orchestrator."""
         pass
 
     def stop(self):
+    @trace_calls('stop', 'prediction_agent_dellacherie.py', 95)
         """No-op for compatibility with existing orchestrator."""
         pass
 
@@ -84,6 +103,7 @@ class PredictionAgent(BaseAgent):
     # Public entry point
     # ------------------------------------------------------------------
     def handle(self, params):
+    @trace_calls('handle', 'prediction_agent_dellacherie.py', 102)
         board = params["board"]
         piece = params["piece"]
         orient = params["orientation"]
@@ -166,6 +186,7 @@ class PredictionAgent(BaseAgent):
     # Drop a piece onto the board, return new board + cleared lines + tspin flag
     # ------------------------------------------------------------------
     def _drop_piece(self, board, shape, col, piece):
+    @trace_calls('_drop_piece', 'prediction_agent_dellacherie.py', 184)
         # Copy board to avoid mutating the original
         b = board.copy()
         # piece starts high enough (y = -max_y)
@@ -226,6 +247,7 @@ class PredictionAgent(BaseAgent):
     # Compute classic board metrics (height, holes, bumpiness, well depth)
     # ------------------------------------------------------------------
     def _board_metrics(self, board):
+    @trace_calls('_board_metrics', 'prediction_agent_dellacherie.py', 244)
         heights = []
         holes = 0
         for col in range(10):

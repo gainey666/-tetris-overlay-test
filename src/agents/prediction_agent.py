@@ -19,6 +19,7 @@ class PredictionAgent(BaseAgent):
     """Consumes binary masks and produces dummy piece predictions."""
 
     def __init__(self, board_processor: BoardProcessorAgent, queue_maxsize: int = 5):
+    @trace_calls('__init__', 'prediction_agent.py', 21)
         self.board_processor = board_processor
         self.prediction_queue: queue.Queue[list[Tuple[int, int, str]]] = queue.Queue(
             maxsize=queue_maxsize
@@ -27,6 +28,7 @@ class PredictionAgent(BaseAgent):
         self._thread: Optional[threading.Thread] = None
 
     def start(self) -> None:
+    @trace_calls('start', 'prediction_agent.py', 29)
         if self._thread and self._thread.is_alive():
             log.debug("PredictionAgent already running.")
             return
@@ -35,15 +37,18 @@ class PredictionAgent(BaseAgent):
         self._thread.start()
 
     def stop(self) -> None:
+    @trace_calls('stop', 'prediction_agent.py', 37)
         self._stop_event.set()
         if self._thread:
             self._thread.join()
 
     def handle(self, params: Optional[dict] = None) -> None:
+    @trace_calls('handle', 'prediction_agent.py', 42)
         self.board_processor.start()
         self.start()
 
     def _run(self) -> None:
+    @trace_calls('_run', 'prediction_agent.py', 46)
         log.info("PredictionAgent started.")
         while not self._stop_event.is_set():
             try:
@@ -63,7 +68,24 @@ class PredictionAgent(BaseAgent):
         log.info("PredictionAgent stopped.")
 
     def _fake_predict(self, mask: np.ndarray) -> list[Tuple[int, int, str]]:
+    @trace_calls('_fake_predict', 'prediction_agent.py', 65)
         import random
+
+# Import our logger bridge
+try:
+    import logger_bridge as log
+
+# Import global function tracer
+try:
+    from tracer.client import safe_trace_calls as trace_calls
+    TRACER_AVAILABLE = True
+except ImportError:
+    TRACER_AVAILABLE = False
+
+    LOGGER_AVAILABLE = True
+except ImportError:
+    LOGGER_AVAILABLE = False
+
 
         piece_types = ["X", "O", "R", "B", "N", "Q", "K"]
         rows, cols = mask.shape

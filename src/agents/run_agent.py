@@ -13,6 +13,22 @@ from .board_processor_agent import BoardProcessorAgent
 from .prediction_agent import PredictionAgent
 from .overlay_renderer_agent import OverlayRendererAgent
 
+# Import our logger bridge
+try:
+    import logger_bridge as log
+
+# Import global function tracer
+try:
+    from tracer.client import safe_trace_calls as trace_calls
+    TRACER_AVAILABLE = True
+except ImportError:
+    TRACER_AVAILABLE = False
+
+    LOGGER_AVAILABLE = True
+except ImportError:
+    LOGGER_AVAILABLE = False
+
+
 log = logging.getLogger(__name__)
 
 
@@ -20,6 +36,7 @@ class RunAgent(BaseAgent):
     """Runs the full pipeline for a specified duration."""
 
     def __init__(self, params: Optional[Dict] = None) -> None:
+    @trace_calls('__init__', 'run_agent.py', 38)
         self.params = params or {}
         self._stop_event = threading.Event()
         self.capture = CaptureAgent()
@@ -31,6 +48,7 @@ class RunAgent(BaseAgent):
         self.overlay.prediction_agent = self.prediction
 
     def handle(self, params: Optional[Dict] = None) -> None:
+    @trace_calls('handle', 'run_agent.py', 49)
         if params:
             self.params.update(params)
         duration = self.params.get("duration", 30)
@@ -51,6 +69,7 @@ class RunAgent(BaseAgent):
         log.info("RunAgent completed after %.2f s.", time.perf_counter() - start)
 
     def shutdown(self) -> None:
+    @trace_calls('shutdown', 'run_agent.py', 69)
         self._stop_event.set()
         try:
             self.overlay.stop()

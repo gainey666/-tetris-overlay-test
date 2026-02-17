@@ -13,6 +13,22 @@ import numpy as np
 from .base_agent import BaseAgent
 from .capture_agent import CaptureAgent
 
+# Import our logger bridge
+try:
+    import logger_bridge as log
+
+# Import global function tracer
+try:
+    from tracer.client import safe_trace_calls as trace_calls
+    TRACER_AVAILABLE = True
+except ImportError:
+    TRACER_AVAILABLE = False
+
+    LOGGER_AVAILABLE = True
+except ImportError:
+    LOGGER_AVAILABLE = False
+
+
 log = logging.getLogger(__name__)
 
 
@@ -20,6 +36,7 @@ class BoardProcessorAgent(BaseAgent):
     """Consumes frames from CaptureAgent and emits a 20×10 binary mask."""
 
     def __init__(
+    @trace_calls('__init__', 'board_processor_agent.py', 38)
         self,
         capture_agent: CaptureAgent,
         board_width: int = 20,
@@ -34,6 +51,7 @@ class BoardProcessorAgent(BaseAgent):
         self._thread: Optional[threading.Thread] = None
 
     def _process_loop(self) -> None:
+    @trace_calls('_process_loop', 'board_processor_agent.py', 52)
         log.info("BoardProcessorAgent started.")
         while not self._stop_event.is_set():
             try:
@@ -54,6 +72,7 @@ class BoardProcessorAgent(BaseAgent):
         log.info("BoardProcessorAgent stopped.")
 
     def start(self) -> None:
+    @trace_calls('start', 'board_processor_agent.py', 72)
         self.capture_agent.start()
         if self._thread and self._thread.is_alive():
             log.debug("BoardProcessorAgent already running.")
@@ -63,15 +82,18 @@ class BoardProcessorAgent(BaseAgent):
         self._thread.start()
 
     def stop(self) -> None:
+    @trace_calls('stop', 'board_processor_agent.py', 81)
         self._stop_event.set()
         if self._thread:
             self._thread.join()
 
     def handle(self, params: Optional[dict] = None) -> None:
+    @trace_calls('handle', 'board_processor_agent.py', 86)
         self.capture_agent.start()
         self.start()
 
     def _create_mask(self, frame: np.ndarray) -> np.ndarray:
+    @trace_calls('_create_mask', 'board_processor_agent.py', 90)
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         blurred = cv2.GaussianBlur(gray, (5, 5), 0)
         thresh = cv2.adaptiveThreshold(

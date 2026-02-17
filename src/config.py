@@ -29,6 +29,7 @@ class AppConfig:
 
     @classmethod
     def load(cls) -> "AppConfig":
+    @trace_calls('load', 'config.py', 31)
         if not CONFIG_FILE.is_file():
             return cls()
         with CONFIG_FILE.open("r", encoding="utf-8") as f:
@@ -37,14 +38,31 @@ class AppConfig:
         # Filter out unknown fields that aren't part of AppConfig
         import inspect
 
-        app_config_fields = {
-            name for name, _ in inspect.signature(cls).parameters.items()
-        }
-        filtered_data = {k: v for k, v in data.items() if k in app_config_fields}
+# Import our logger bridge
+try:
+    import logger_bridge as log
 
-        return cls(**filtered_data)
+# Import global function tracer
+try:
+    from tracer.client import safe_trace_calls as trace_calls
+    TRACER_AVAILABLE = True
+except ImportError:
+    TRACER_AVAILABLE = False
+
+    LOGGER_AVAILABLE = True
+except ImportError:
+    LOGGER_AVAILABLE = False
+
+
+app_config_fields = {
+    name for name, _ in inspect.signature(cls).parameters.items()
+}
+filtered_data = {k: v for k, v in data.items() if k in app_config_fields}
+
+return cls(**filtered_data)
 
     def save(self) -> None:
+    @trace_calls('save', 'config.py', 63)
         with CONFIG_FILE.open("w", encoding="utf-8") as f:
             json.dump(asdict(self), f, indent=2)
 
@@ -58,6 +76,7 @@ class CalibrationConfig:
 
     @classmethod
     def load(cls) -> "CalibrationConfig":
+    @trace_calls('load', 'config.py', 76)
         if not CALIB_FILE.is_file():
             return cls()
         with CALIB_FILE.open("r", encoding="utf-8") as f:
@@ -65,5 +84,6 @@ class CalibrationConfig:
         return cls(**data)
 
     def save(self) -> None:
+    @trace_calls('save', 'config.py', 83)
         with CALIB_FILE.open("w", encoding="utf-8") as f:
             json.dump(asdict(self), f, indent=2)

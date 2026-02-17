@@ -1,9 +1,0 @@
-{
-  "ghost_pieces_enabled": true,
-  "performance_monitor_enabled": true,
-  "statistics_enabled": true,
-  "b2b_indicators_enabled": true,
-  "combo_indicators_enabled": true,
-  "debug_mode_enabled": false,
-  "experimental_ai_enabled": false
-}

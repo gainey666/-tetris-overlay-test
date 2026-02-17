@@ -14,3 +14,8 @@ Pillow>=10.0
 pygetwindow   # window-title detection
 keyboard      # global hot-key handling
 pywin32>=227  # Windows API access
+
+# Optional tracer (client only)
+tracer>=1.0.0
+# Optional tracer with Qt UI
+# tracer[ui]>=1.0.0
