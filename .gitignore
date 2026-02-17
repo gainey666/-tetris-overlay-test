@@ -57,6 +57,8 @@ docs/MANDATORY_LOGGING_STANDARD.md
 docs/PROJECT_CLEANUP_GUIDE.md
 docs/PROJECT_STRUCTURE_PLAN.md
 docs/legacy/
+docs/DAY6_*.md
+docs/TODAYS_*.md
 
 # CMake / build artefacts
 build/
