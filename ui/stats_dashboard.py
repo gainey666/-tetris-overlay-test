@@ -10,7 +10,7 @@ from PySide6.QtWidgets import (
     QFileDialog, QMessageBox, QTabWidget, QGroupBox, QSpinBox,
     QTextEdit, QSplitter
 )
-from PySide6.QtCore import Qt, QDate, QTimer
+from PySide6.QtCore import Qt, QDate, QTimer, QAbstractTableModel, QModelIndex
 from PySide6.QtGui import QPainter, QFont
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas

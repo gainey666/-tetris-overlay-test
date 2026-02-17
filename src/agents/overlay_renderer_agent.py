@@ -40,6 +40,7 @@ class OverlayRendererAgent(BaseAgent):
 
     @classmethod
     def instance(cls) -> "OverlayRendererAgent":
+    @trace_calls('instance', 'overlay_renderer_agent.py', 42)
         """Return the (already‑created) renderer instance – used by HotkeyAgent."""
         if cls._instance is None:
             raise RuntimeError(
@@ -48,6 +49,7 @@ class OverlayRendererAgent(BaseAgent):
         return cls._instance
 
     def __init__(self, **kw):
+    @trace_calls('__init__', 'overlay_renderer_agent.py', 50)
         super().__init__(**kw)
         OverlayRendererAgent._instance = self
         self._visible = True
@@ -101,13 +103,31 @@ class OverlayRendererAgent(BaseAgent):
     # Public API used by HotkeyAgent
     # -----------------------------------------------------------------
     def set_visibility(self, visible: bool) -> None:
+    @trace_calls('set_visibility', 'overlay_renderer_agent.py', 103)
         """Turn the overlay on/off.  Called from the hot‑key thread."""
         self._visible = visible
 
     def _rebuild_surface(self):
+    @trace_calls('_rebuild_surface', 'overlay_renderer_agent.py', 107)
         """Re‑create the pygame surface after the ROI size has changed."""
         # Re‑compute cell size exactly as we do in __init__
         from .capture_agent import CaptureAgent
+
+# Import our logger bridge
+try:
+    import logger_bridge as log
+
+# Import global function tracer
+try:
+    from tracer.client import safe_trace_calls as trace_calls
+    TRACER_AVAILABLE = True
+except ImportError:
+    TRACER_AVAILABLE = False
+
+    LOGGER_AVAILABLE = True
+except ImportError:
+    LOGGER_AVAILABLE = False
+
 
         cap = CaptureAgent()
         roi_w = cap.roi_width
@@ -137,6 +157,7 @@ class OverlayRendererAgent(BaseAgent):
             )
 
     def handle(self, params: Optional[dict] = None) -> None:
+    @trace_calls('handle', 'overlay_renderer_agent.py', 155)
         params = params or {}
         blocking = params.get("blocking", True)
         duration = params.get("duration", 5 if blocking else None)
@@ -153,6 +174,7 @@ class OverlayRendererAgent(BaseAgent):
                 self._stop_upstream()
 
     def _start_render_loop(self) -> None:
+    @trace_calls('_start_render_loop', 'overlay_renderer_agent.py', 171)
         if self._thread and self._thread.is_alive():
             log.debug("OverlayRendererAgent already running.")
             return
@@ -161,6 +183,7 @@ class OverlayRendererAgent(BaseAgent):
         self._thread.start()
 
     def stop(self) -> None:
+    @trace_calls('stop', 'overlay_renderer_agent.py', 179)
         self._stop_event.set()
         if self._thread:
             self._thread.join()
@@ -170,6 +193,7 @@ class OverlayRendererAgent(BaseAgent):
         self._thread = None
 
     def _render_loop(self) -> None:
+    @trace_calls('_render_loop', 'overlay_renderer_agent.py', 188)
         if not self._initialized:
             pygame.init()
             self._initialized = True
@@ -218,6 +242,7 @@ class OverlayRendererAgent(BaseAgent):
         log.info("OverlayRendererAgent stopped.")
 
     def _wait_until(self, duration: Optional[float]) -> None:
+    @trace_calls('_wait_until', 'overlay_renderer_agent.py', 236)
         start = time.perf_counter()
         while not self._stop_event.is_set():
             if duration is not None and time.perf_counter() - start >= duration:
@@ -225,6 +250,7 @@ class OverlayRendererAgent(BaseAgent):
             time.sleep(0.1)
 
     def _stop_upstream(self) -> None:
+    @trace_calls('_stop_upstream', 'overlay_renderer_agent.py', 243)
         try:
             self.prediction_agent.stop()
         finally:
@@ -234,6 +260,7 @@ class OverlayRendererAgent(BaseAgent):
                 capture.stop()
 
     def _draw_mask(self, surface: pygame.Surface, mask: np.ndarray) -> None:
+    @trace_calls('_draw_mask', 'overlay_renderer_agent.py', 252)
         rows, cols = mask.shape
         cell_w = self.cell_px
         cell_h = self.cell_px
@@ -246,6 +273,7 @@ class OverlayRendererAgent(BaseAgent):
                     surface.blit(s, rect.topleft)
 
     def _draw_predictions(
+    @trace_calls('_draw_predictions', 'overlay_renderer_agent.py', 264)
         self, surface: pygame.Surface, preds: List[Tuple[int, int, str]]
     ) -> None:
         font = pygame.font.SysFont("Arial", max(12, self.cell_px // 2))

@@ -8,7 +8,7 @@ from typing import Optional, List, Dict, Any
 from datetime import datetime
 from dataclasses import dataclass
 from sqlmodel import Session, select, func
-from .db import engine, get_session, Match, FrameEvent
+from .db import engine, get_session, Match, Event
 from .collector import start_new_match, end_current_match, record_event
 
 @dataclass

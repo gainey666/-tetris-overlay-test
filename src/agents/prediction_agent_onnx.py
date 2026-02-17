@@ -5,6 +5,22 @@ import numpy as np, onnxruntime as ort
 from .base_agent import BaseAgent
 from pathlib import Path
 
+# Import our logger bridge
+try:
+    import logger_bridge as log
+
+# Import global function tracer
+try:
+    from tracer.client import safe_trace_calls as trace_calls
+    TRACER_AVAILABLE = True
+except ImportError:
+    TRACER_AVAILABLE = False
+
+    LOGGER_AVAILABLE = True
+except ImportError:
+    LOGGER_AVAILABLE = False
+
+
 
 class PredictionAgent(BaseAgent):
     """
@@ -18,6 +34,7 @@ class PredictionAgent(BaseAgent):
     """
 
     def __init__(self):
+    @trace_calls('__init__', 'prediction_agent_onnx.py', 36)
         model_path = Path(__file__).parent.parent / "models" / "tetris_perfect.onnx"
         if not model_path.is_file():
             raise FileNotFoundError(f"ONNX model not found: {model_path}")
@@ -31,6 +48,7 @@ class PredictionAgent(BaseAgent):
         self.output_name = self.session.get_outputs()[0].name
 
     def _prepare_input(self, board, piece, orientation):
+    @trace_calls('_prepare_input', 'prediction_agent_onnx.py', 49)
         # Convert board 0/255 → 0/1 floats
         board_bin = (board > 0).astype(np.float32).reshape(1, 20, 10)
 
@@ -46,6 +64,7 @@ class PredictionAgent(BaseAgent):
         return {"board": board_bin, "piece": piece_vec, "orientation": orient_scalar}
 
     def handle(self, params):
+    @trace_calls('handle', 'prediction_agent_onnx.py', 64)
         board = params["board"]
         piece = params["piece"]
         orient = params["orientation"]
@@ -66,9 +85,11 @@ class PredictionAgent(BaseAgent):
         }
 
     def start(self):
+    @trace_calls('start', 'prediction_agent_onnx.py', 84)
         """No-op for compatibility with existing orchestrator."""
         pass
 
     def stop(self):
+    @trace_calls('stop', 'prediction_agent_onnx.py', 88)
         """No-op for compatibility with existing orchestrator."""
         pass

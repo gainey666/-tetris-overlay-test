@@ -69,6 +69,39 @@ pip install -r requirements.txt
 python run_overlay_core.py
 ```
 
+## 📡 Optional – Tracer (live function-call view)
+
+The overlay ships with a lightweight tracer that shows a live table of every
+function decorated with `@trace_calls`. It is **optional** – if the tracer package
+is not installed, the decorators automatically fall back to no-ops and the
+overlay continues to run normally.
+
+### Install the tracer (optional)
+
+```bash
+# From the repository root
+pip install -e ./tracer
+```
+
+### Run the tracer UI
+
+```bash
+python -m tracer.server
+```
+
+Leave the UI running in a separate terminal, then start any overlay entry point
+(`python run_overlay_core.py`, `python run_simple_working_overlay.py`, etc.). You’ll
+see entries such as:
+
+```
+S run_simple_working_overlay : main
+S run_overlay_core           : _frame_worker
+F piece_detector             : get_current_piece
+```
+
+If you skip the optional install, `@trace_calls` simply does nothing, so there
+is no runtime overhead.
+
 ### Docker Installation
 ```bash
 docker pull gainey666/tetris-overlay:latest
