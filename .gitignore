@@ -52,6 +52,11 @@ docs/extended*.md
 docs/possalbe*.md
 docs/product-readiness*.md
 docs/management*.md
+docs/LLM_QUICK_START.md
+docs/MANDATORY_LOGGING_STANDARD.md
+docs/PROJECT_CLEANUP_GUIDE.md
+docs/PROJECT_STRUCTURE_PLAN.md
+docs/legacy/
 
 # CMake / build artefacts
 build/
