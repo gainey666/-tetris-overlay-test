@@ -38,6 +38,11 @@ legacy/
 docs/PROJECT_*.md
 docs/NEXT_STEPS_PLAN.md
 docs/PREDICTION_COMPONENT_SUMMARY.md
+docs/*plan*.md
+docs/*PLAN*.md
+docs/bosses*.md
+docs/clean*.md
+docs/phase1-completion-report.md
 
 # CMake / build artefacts
 build/
