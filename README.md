@@ -71,16 +71,25 @@ python run_overlay_core.py
 
 ## 📡 Optional – Tracer (live function-call view)
 
-The overlay ships with a lightweight tracer that shows a live table of every
-function decorated with `@trace_calls`. It is **optional** – if the tracer package
-is not installed, the decorators automatically fall back to no-ops and the
-overlay continues to run normally.
+The tracer now lives in its own repository: [gainey666/tracer](https://github.com/gainey666/tracer).
+It renders a live table of every function decorated with `@trace_calls`. The
+dependency is **optional**—when it is absent, the decorators fall back to a
+no-op and the overlay continues to run normally.
 
-### Install the tracer (optional)
+### Install the tracer
+
+Choose either a pip install (recommended) or a Git submodule checkout:
 
 ```bash
-# From the repository root
-pip install -e ./tracer
+# Option A – pip (client only)
+pip install tracer>=1.0.0
+
+# Option B – pip with UI extras (requires PySide6)
+pip install "tracer[ui]>=1.0.0"
+
+# Option C – local submodule checkout
+git submodule add https://github.com/gainey666/tracer.git tracer
+pip install -e ./tracer[ui]
 ```
 
 ### Run the tracer UI
@@ -99,8 +108,8 @@ S run_overlay_core           : _frame_worker
 F piece_detector             : get_current_piece
 ```
 
-If you skip the optional install, `@trace_calls` simply does nothing, so there
-is no runtime overhead.
+Skip the optional install if you only need the overlay—the decorators degrade to
+no-ops and there is no runtime overhead.
 
 ### Docker Installation
 ```bash
