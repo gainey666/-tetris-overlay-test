@@ -77,3 +77,5 @@ cmake-build-*/
 .codeiumignore
 .vscode/
 .idea/
+.github/
+.windsurf/
