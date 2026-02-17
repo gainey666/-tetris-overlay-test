@@ -79,3 +79,23 @@ cmake-build-*/
 .idea/
 .github/
 .windsurf/
+
+# Internal development files
+baseline_tests.txt
+benchmark.txt
+build_capture.py
+clean_overlay_files.py
+complete_cleanup.py
+repo-inventory.txt
+scan_output.txt
+simple_game_test.py
+test_game_images.py
+test_tetris_overlay.py
+test_tracer.py
+tetris_overlay.spec
+add_tracer_to_all.py
+SYSTEM_ANALYSIS.md
+MyOverlayInstaller.iss
+pyproject_old.toml
+feature_toggles.json
+stats.db
