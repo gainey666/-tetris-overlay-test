@@ -43,6 +43,15 @@ docs/*PLAN*.md
 docs/bosses*.md
 docs/clean*.md
 docs/phase1-completion-report.md
+docs/curernt*.md
+docs/mamagments*.md
+docs/reply.md
+docs/reviewpart*.md
+docs/adding*.md
+docs/extended*.md
+docs/possalbe*.md
+docs/product-readiness*.md
+docs/management*.md
 
 # CMake / build artefacts
 build/
