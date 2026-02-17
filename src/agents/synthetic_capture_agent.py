@@ -1,6 +1,22 @@
 import pathlib, cv2, numpy as np, queue, threading, time
 from .base_agent import BaseAgent
 
+# Import our logger bridge
+try:
+    import logger_bridge as log
+
+# Import global function tracer
+try:
+    from tracer.client import safe_trace_calls as trace_calls
+    TRACER_AVAILABLE = True
+except ImportError:
+    TRACER_AVAILABLE = False
+
+    LOGGER_AVAILABLE = True
+except ImportError:
+    LOGGER_AVAILABLE = False
+
+
 
 class SyntheticCaptureAgent(BaseAgent):
     """
@@ -9,6 +25,7 @@ class SyntheticCaptureAgent(BaseAgent):
     """
 
     def __init__(self, fps: int = 60):
+    @trace_calls('__init__', 'synthetic_capture_agent.py', 27)
         self.fps = fps
         self.frame_queue = queue.Queue(maxsize=10)
         self._stop = threading.Event()
@@ -26,6 +43,7 @@ class SyntheticCaptureAgent(BaseAgent):
         self._frame = cv2.resize(self._frame, (640, 1280))  # width×height
 
     def _run(self):
+    @trace_calls('_run', 'synthetic_capture_agent.py', 44)
         period = 1.0 / self.fps
         while not self._stop.is_set():
             start = time.perf_counter()
@@ -44,6 +62,7 @@ class SyntheticCaptureAgent(BaseAgent):
                 time.sleep(period - elapsed)
 
     def start(self):
+    @trace_calls('start', 'synthetic_capture_agent.py', 62)
         if self._thread and self._thread.is_alive():
             return
         self._stop.clear()
@@ -51,11 +70,13 @@ class SyntheticCaptureAgent(BaseAgent):
         self._thread.start()
 
     def stop(self):
+    @trace_calls('stop', 'synthetic_capture_agent.py', 69)
         self._stop.set()
         if self._thread:
             self._thread.join()
 
     def handle(self, params: dict | None = None) -> None:
+    @trace_calls('handle', 'synthetic_capture_agent.py', 74)
         """Start/stop capture based on orchestrator request."""
         if params and params.get("stop"):
             self.stop()

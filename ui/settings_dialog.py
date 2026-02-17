@@ -2,15 +2,19 @@
 
 import sys
 import re
+import json
 from PySide6.QtWidgets import (
     QDialog, QTabWidget, QWidget, QVBoxLayout, QHBoxLayout,
     QLabel, QLineEdit, QPushButton, QColorDialog, QSlider,
-    QComboBox, QCheckBox, QKeySequenceEdit, QMessageBox
+    QComboBox, QCheckBox, QKeySequenceEdit, QMessageBox,
+    QGroupBox, QFormLayout, QSpinBox, QDoubleSpinBox,
+    QTextEdit, QScrollArea
 )
 from PySide6.QtCore import Signal, Qt, QSize
 from PySide6.QtGui import QPainter, QColor, QKeySequence
 from .settings import Settings
 from .settings_storage import load as load_settings, save as save_settings
+import jsonschema
 
 
 class LivePreviewWidget(QWidget):
@@ -56,149 +60,231 @@ class LivePreviewWidget(QWidget):
 
 
 class SettingsDialog(QDialog):
-    settings_changed = Signal(Settings)   # emitted after OK
-
+    """Settings dialog with tabs and live preview."""
+    settings_changed = Signal(Settings)
+    
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Tetris Overlay – Settings")
-        self.resize(500, 500)
-
-        self._settings = load_settings()
-        self._init_ui()
-        self._populate_fields()
-
-    def _init_ui(self):
+        self.setWindowTitle("Tetris Overlay Settings")
+        self.setModal(True)
+        self.resize(800, 600)
+        
+        self.settings = load_settings()
+        self._validation_errors = {}
+        
+        self._setup_ui()
+        self._load_settings()
+        
+    def _setup_ui(self):
         layout = QVBoxLayout(self)
-
+        
+        # Create tab widget
         self.tabs = QTabWidget()
+        
+        # Create tabs
+        self._create_general_tab()
+        self._create_ghost_tab()
+        self._create_hotkeys_tab()
+        self._create_visual_flags_tab()
+        self._create_advanced_tab()
+        
         layout.addWidget(self.tabs)
-
-        # ---- General tab -------------------------------------------------
-        self.tab_general = QWidget()
-        tl = QVBoxLayout(self.tab_general)
-
-        # ROI fields
-        self.left_roi_edit = QLineEdit()
-        self.right_roi_edit = QLineEdit()
-        tl.addWidget(QLabel("Left board ROI (x,y,w,h):"))
-        tl.addWidget(self.left_roi_edit)
-        tl.addWidget(QLabel("Right board ROI (x,y,w,h):"))
-        tl.addWidget(self.right_roi_edit)
-
-        # Prediction agent selector
+        
+        # Dialog buttons
+        buttons = QHBoxLayout()
+        self.reset_btn = QPushButton("Reset to Defaults")
+        self.reset_btn.clicked.connect(self._reset_to_defaults)
+        
+        self.cancel_btn = QPushButton("Cancel")
+        self.cancel_btn.clicked.connect(self.reject)
+        
+        self.apply_btn = QPushButton("Apply")
+        self.apply_btn.clicked.connect(self._apply_settings)
+        
+        self.ok_btn = QPushButton("OK")
+        self.ok_btn.clicked.connect(self._ok_clicked)
+        
+        buttons.addWidget(self.reset_btn)
+        buttons.addStretch()
+        buttons.addWidget(self.cancel_btn)
+        buttons.addWidget(self.apply_btn)
+        buttons.addWidget(self.ok_btn)
+        
+        layout.addLayout(buttons)
+        
+    def _create_general_tab(self):
+        widget = QWidget()
+        layout = QVBoxLayout(widget)
+        
+        # ROI Group
+        roi_group = QGroupBox("Region of Interest")
+        roi_layout = QFormLayout(roi_group)
+        
+        self.roi_left_edit = QLineEdit()
+        self.roi_left_edit.setPlaceholderText("x,y,width,height")
+        roi_layout.addRow("Left ROI:", self.roi_left_edit)
+        
+        self.roi_right_edit = QLineEdit()
+        self.roi_right_edit.setPlaceholderText("x,y,width,height")
+        roi_layout.addRow("Right ROI:", self.roi_right_edit)
+        
+        # Agent Selection
         self.agent_combo = QComboBox()
-        self.agent_combo.addItems(["dellacherie", "onnx", "simple", "mock"])
-        tl.addWidget(QLabel("Prediction agent:"))
-        tl.addWidget(self.agent_combo)
-
-        self.tabs.addTab(self.tab_general, "General")
-
-        # ---- Ghost tab ----------------------------------------------------
-        self.tab_ghost = QWidget()
-        tg = QVBoxLayout(self.tab_ghost)
-
-        # Colour picker
-        self.colour_btn = QPushButton("Pick colour")
-        self.colour_btn.clicked.connect(self._pick_colour)
-        tg.addWidget(self.colour_btn)
-
-        # Opacity slider (0-100)
+        self.agent_combo.addItems(["Dellacherie", "Bertilsson"])
+        agent_layout = QFormLayout()
+        agent_layout.addRow("Prediction Agent:", self.agent_combo)
+        
+        agent_group = QGroupBox("AI Agent")
+        agent_group.setLayout(agent_layout)
+        
+        layout.addWidget(roi_group)
+        layout.addWidget(agent_group)
+        layout.addStretch()
+        
+        self.tabs.addTab(widget, "General")
+        
+    def _create_ghost_tab(self):
+        widget = QWidget()
+        layout = QHBoxLayout(widget)
+        
+        # Left side - Controls
+        controls = QVBoxLayout()
+        
+        # Color picker
+        color_group = QGroupBox("Ghost Color")
+        color_layout = QFormLayout(color_group)
+        
+        self.color_btn = QPushButton("Choose Color")
+        self.color_btn.clicked.connect(self._choose_color)
+        color_layout.addRow("Color:", self.color_btn)
+        
+        # Opacity slider
         self.opacity_slider = QSlider(Qt.Horizontal)
         self.opacity_slider.setRange(0, 100)
-        tg.addWidget(QLabel("Opacity:"))
-        tg.addWidget(self.opacity_slider)
-
-        # Live preview
+        self.opacity_slider.valueChanged.connect(self._update_opacity_label)
+        self.opacity_label = QLabel("50%")
+        
+        opacity_layout = QHBoxLayout()
+        opacity_layout.addWidget(self.opacity_slider)
+        opacity_layout.addWidget(self.opacity_label)
+        color_layout.addRow("Opacity:", opacity_layout)
+        
+        controls.addWidget(color_group)
+        
+        # Visual effects
+        effects_group = QGroupBox("Visual Effects")
+        effects_layout = QFormLayout(effects_group)
+        
+        self.outline_only_cb = QCheckBox("Outline Only")
+        effects_layout.addRow("Style:", self.outline_only_cb)
+        
+        self.fade_effect_cb = QCheckBox("Fade Animation")
+        effects_layout.addRow("Effects:", self.fade_effect_cb)
+        
+        controls.addWidget(effects_group)
+        controls.addStretch()
+        
+        # Right side - Live preview
         self.preview = LivePreviewWidget()
-        tg.addWidget(QLabel("Live preview:"))
-        tg.addWidget(self.preview)
-
-        self.tabs.addTab(self.tab_ghost, "Ghost")
-
-        # ---- Hotkeys tab -------------------------------------------------
-        self.tab_hotkeys = QWidget()
-        th = QVBoxLayout(self.tab_hotkeys)
-
-        self.toggle_edit = QKeySequenceEdit()
-        self.open_edit = QKeySequenceEdit()
-        self.debug_edit = QKeySequenceEdit()
-        self.quit_edit = QKeySequenceEdit()
-        self.calibrate_edit = QKeySequenceEdit()
-        self.stats_edit = QKeySequenceEdit()
-
-        th.addWidget(QLabel("Toggle overlay (default F9):"))
-        th.addWidget(self.toggle_edit)
-        th.addWidget(QLabel("Open settings (default F1):"))
-        th.addWidget(self.open_edit)
-        th.addWidget(QLabel("Debug logging (default F2):"))
-        th.addWidget(self.debug_edit)
-        th.addWidget(QLabel("Quit (Esc):"))
-        th.addWidget(self.quit_edit)
-        th.addWidget(QLabel("Calibrate (Ctrl+Alt+C):"))
-        th.addWidget(self.calibrate_edit)
-        th.addWidget(QLabel("Open Stats (Ctrl+Alt+S):"))
-        th.addWidget(self.stats_edit)
-
-        self.tabs.addTab(self.tab_hotkeys, "Hotkeys")
-
-        # ---- Flags tab ----------------------------------------------------
-        self.tab_flags = QWidget()
-        tf = QVBoxLayout(self.tab_flags)
-
-        self.combo_chk = QCheckBox("Show combo visual")
-        self.b2b_chk = QCheckBox("Show B2B visual")
-        tf.addWidget(self.combo_chk)
-        tf.addWidget(self.b2b_chk)
-
-        self.tabs.addTab(self.tab_flags, "Visual Flags")
-
-        # ---- Buttons ------------------------------------------------------
-        btn_layout = QHBoxLayout()
-        self.ok_btn = QPushButton("OK")
-        self.cancel_btn = QPushButton("Cancel")
-        self.apply_btn = QPushButton("Apply")
-        self.reset_btn = QPushButton("Reset to Defaults")
-        btn_layout.addStretch()
-        btn_layout.addWidget(self.reset_btn)
-        btn_layout.addWidget(self.apply_btn)
-        btn_layout.addWidget(self.ok_btn)
-        btn_layout.addWidget(self.cancel_btn)
-        layout.addLayout(btn_layout)
-
-        self.ok_btn.clicked.connect(self._accept)
-        self.apply_btn.clicked.connect(self._apply)
-        self.cancel_btn.clicked.connect(self.reject)
-        self.reset_btn.clicked.connect(self._reset_to_defaults)
-
-        # Preview updates when colour/opacity changes
-        self.opacity_slider.valueChanged.connect(self._update_preview)
-
-    def _populate_fields(self):
-        s = self._settings
-        self.left_roi_edit.setText(",".join(map(str, s.roi_left)))
-        self.right_roi_edit.setText(",".join(map(str, s.roi_right)))
-        self.agent_combo.setCurrentText(s.prediction_agent)
-
-        # Ghost colour
-        r,g,b = s.ghost.colour
-        self.colour_btn.setStyleSheet(
-            f"background-color: rgb({r},{g},{b});"
-        )
-        self.opacity_slider.setValue(int(s.ghost.opacity*100))
-
-        # Hotkeys
-        self.toggle_edit.setKeySequence(QKeySequence(s.hotkeys.toggle_overlay))
-        self.open_edit.setKeySequence(QKeySequence(s.hotkeys.open_settings))
-        self.debug_edit.setKeySequence(QKeySequence(s.hotkeys.debug_logging))
-        self.quit_edit.setKeySequence(QKeySequence(s.hotkeys.quit))
-        self.calibrate_edit.setKeySequence(QKeySequence(s.hotkeys.calibrate))
-        self.stats_edit.setKeySequence(QKeySequence(s.hotkeys.open_stats))
-
-        # Visual flags
-        self.combo_chk.setChecked(s.show_combo)
-        self.b2b_chk.setChecked(s.show_b2b)
-
-        self._update_preview()
+        preview_group = QGroupBox("Live Preview")
+        preview_layout = QVBoxLayout(preview_group)
+        preview_layout.addWidget(self.preview)
+        
+        layout.addLayout(controls, 1)
+        layout.addWidget(preview_group, 2)
+        
+        self.tabs.addTab(widget, "Ghost")
+        
+    def _create_hotkeys_tab(self):
+        widget = QWidget()
+        layout = QVBoxLayout(widget)
+        
+        hotkeys_group = QGroupBox("Hotkey Configuration")
+        hotkeys_layout = QFormLayout(hotkeys_group)
+        
+        self.hotkey_edits = {}
+        hotkey_names = [
+            ("toggle_overlay", "Toggle Overlay"),
+            ("open_settings", "Open Settings"),
+            ("open_stats", "Open Statistics"),
+            ("debug_logging", "Debug Logging"),
+            ("quit", "Quit Application"),
+            ("calibrate", "Calibrate ROIs")
+        ]
+        
+        for key, label in hotkey_names:
+            edit = QKeySequenceEdit()
+            self.hotkey_edits[key] = edit
+            hotkeys_layout.addRow(label + ":", edit)
+        
+        layout.addWidget(hotkeys_group)
+        layout.addStretch()
+        
+        self.tabs.addTab(widget, "Hotkeys")
+        
+    def _create_visual_flags_tab(self):
+        widget = QWidget()
+        layout = QVBoxLayout(widget)
+        
+        flags_group = QGroupBox("Visual Flags")
+        flags_layout = QFormLayout(flags_group)
+        
+        self.show_combo_cb = QCheckBox("Show Combo Indicator")
+        flags_layout.addRow("Combo:", self.show_combo_cb)
+        
+        self.show_b2b_cb = QCheckBox("Show B2B Indicator")
+        flags_layout.addRow("B2B:", self.show_b2b_cb)
+        
+        self.show_fps_cb = QCheckBox("Show FPS Counter")
+        flags_layout.addRow("Performance:", self.show_fps_cb)
+        
+        self.debug_mode_cb = QCheckBox("Debug Mode")
+        flags_layout.addRow("Debug:", self.debug_mode_cb)
+        
+        layout.addWidget(flags_group)
+        layout.addStretch()
+        
+        self.tabs.addTab(widget, "Visual Flags")
+        
+    def _create_advanced_tab(self):
+        widget = QWidget()
+        layout = QVBoxLayout(widget)
+        
+        # Advanced settings
+        advanced_group = QGroupBox("Advanced Settings")
+        advanced_layout = QFormLayout(advanced_group)
+        
+        self.fps_spinbox = QSpinBox()
+        self.fps_spinbox.setRange(10, 60)
+        self.fps_spinbox.setValue(30)
+        advanced_layout.addRow("Target FPS:", self.fps_spinbox)
+        
+        self.timeout_spinbox = QSpinBox()
+        self.timeout_spinbox.setRange(100, 5000)
+        self.timeout_spinbox.setValue(1000)
+        advanced_layout.addRow("Frame Timeout (ms):", self.timeout_spinbox)
+        
+        layout.addWidget(advanced_group)
+        
+        # Validation status
+        self.validation_text = QTextEdit()
+        self.validation_text.setReadOnly(True)
+        self.validation_text.setMaximumHeight(100)
+        
+        validation_group = QGroupBox("Validation Status")
+        validation_layout = QVBoxLayout(validation_group)
+        validation_layout.addWidget(self.validation_text)
+        
+        layout.addWidget(validation_group)
+        layout.addStretch()
+        
+        self.tabs.addTab(widget, "Advanced")
+        
+    def _choose_color(self):
+        color = QColorDialog.getColor()
+        if color.isValid():
+            self._ghost_color = (color.red(), color.green(), color.blue())
+            self.color_btn.setStyleSheet(f"background-color: {color.name()}")
 
     def _pick_colour(self):
         current_color = self.colour_btn.palette().color(self.colour_btn.backgroundRole())

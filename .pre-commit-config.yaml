@@ -1,0 +1,9 @@
+repos:
+  - repo: local
+    hooks:
+      - id: black
+        language_version: python3.13
+      - id: ruff
+        args: [--fix, --exit-non-zero-on-fix]
+      - id: mypy
+        additional_dependencies: [types-PySide6, types-Pillow]
